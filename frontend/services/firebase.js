@@ -9,14 +9,24 @@ import { getAuth } from 'firebase/auth';
 // import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { getFirestore } from 'firebase/firestore';
+import Constants from 'expo-constants';
+
+const {
+  FIREBASE_API_KEY,
+  FIREBASE_AUTH_DOMAIN,
+  FIREBASE_PROJECT_ID,
+  FIREBASE_STORAGE_BUCKET,
+  FIREBASE_MESSAGING_SENDER_ID,
+  FIREBASE_APP_ID,
+} = Constants.expoConfig?.extra ?? {};
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC67NDLPWjqDjuQgCm0wI86CaV7en138DA",
-  authDomain: "virtual-closet-outfit-planner.firebaseapp.com",
-  projectId: "virtual-closet-outfit-planner",
-  storageBucket: "virtual-closet-outfit-planner.firebasestorage.app",
-  messagingSenderId: "970548662630",
-  appId: "1:970548662630:web:63a0d2a47ebcd7830478a7"
+  apiKey: FIREBASE_API_KEY,
+  authDomain: FIREBASE_AUTH_DOMAIN,
+  projectId: FIREBASE_PROJECT_ID,
+  storageBucket: FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: FIREBASE_MESSAGING_SENDER_ID,
+  appId: FIREBASE_APP_ID,
 };
 
 const app = initializeApp(firebaseConfig);

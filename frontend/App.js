@@ -6,6 +6,14 @@ import { auth } from './services/firebase';
 import LoginScreen from './screens/LoginScreen';
 import HomeScreen from './screens/HomeScreen.js';
 
+import { LogBox } from 'react-native';
+
+LogBox.ignoreLogs([
+  'AsyncStorage has been extracted from react-native core',
+  'Unsupported top level event type "topInsetsChange"',
+  'Unsupported top level event type "topHeaderHeightChange"',
+]);
+
 const Stack = createNativeStackNavigator();
 
 export default function App() {
