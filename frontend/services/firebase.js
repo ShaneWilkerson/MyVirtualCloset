@@ -14,7 +14,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyC67NDLPWjqDjuQgCm0wI86CaV7en138DA",
   authDomain: "virtual-closet-outfit-planner.firebaseapp.com",
   projectId: "virtual-closet-outfit-planner",
-  storageBucket: "virtual-closet-outfit-planner.appspot.com",
+  storageBucket: "virtual-closet-outfit-planner.firebasestorage.app",
   messagingSenderId: "970548662630",
   appId: "1:970548662630:web:63a0d2a47ebcd7830478a7"
 };
