@@ -1,20 +1,16 @@
 import React from 'react';
-import { View, Text, Button, StyleSheet } from 'react-native';
+import { View, Button, Text, StyleSheet } from 'react-native';
 import { signOut } from 'firebase/auth';
 import { auth } from '../services/firebase';
-import ImageUploader from '../components/ImageUploader';
 
-export default function HomeScreen() {
+export default function LogoutScreen() {
   const handleLogout = async () => {
     await signOut(auth);
   };
 
   return (
     <View style={styles.container}>
-      <View>
-        <Text>Welcome! 🎉</Text>
-        <ImageUploader />
-      </View>
+      <Text style={styles.text}>sign out?</Text>
       <Button title="Sign Out" onPress={handleLogout} />
     </View>
   );
@@ -22,5 +18,5 @@ export default function HomeScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  text: { fontSize: 20, marginBottom: 20 },
+  text: { fontSize: 18, marginBottom: 20 },
 });
