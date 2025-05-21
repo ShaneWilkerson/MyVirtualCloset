@@ -4,6 +4,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { db } from '../services/firebase';
 import { getAuth } from 'firebase/auth';
+import { collection, addDoc, Timestamp } from 'firebase/firestore';
 import uuid from 'react-native-uuid';
 
 export default function ImageUploader() {
@@ -40,24 +41,17 @@ export default function ImageUploader() {
       const storage = getStorage();
       const storageRef = ref(storage, `clothing/${filename}`);
 
-      await uploadBytes(storageRef, blob); //  Upload to Firebase Storage
-
+      await uploadBytes(storageRef, blob);
       const downloadURL = await getDownloadURL(storageRef);
-      console.log('Download URL:', downloadURL);
 
-      // Save metadata to Firestore
-      const imageData = {
+      await addDoc(collection(db, 'images'), {
         uid: user.uid,
         url: downloadURL,
-        createdAt: new Date(),
-      };
+        createdAt: Timestamp.now(),
+      });
 
-      // Optional: confirm Firestore is initialized properly
-      if (db.collection) {
-        await db.collection('images').add(imageData);
-      }
-
-      Alert.alert('Success', 'Image uploaded!', [{ text: 'OK' }]);
+      Alert.alert('Success', 'Image uploaded!');
+      setImageUri(null);
     } catch (err) {
       console.error('Upload failed:', JSON.stringify(err, null, 2));
       Alert.alert('Upload failed', err.message || 'Unknown error');
