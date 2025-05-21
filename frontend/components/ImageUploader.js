@@ -45,7 +45,7 @@ export default function ImageUploader() {
       const downloadURL = await getDownloadURL(storageRef);
       console.log('Download URL:', downloadURL);
 
-      // 🔄 Save metadata to Firestore
+      // Save metadata to Firestore
       const imageData = {
         uid: user.uid,
         url: downloadURL,
