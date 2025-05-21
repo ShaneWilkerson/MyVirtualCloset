@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './services/firebase';
 import LoginScreen from './screens/LoginScreen';
+import SignupScreen from './screens/SignupScreen';
 import TabNavigator from './navigation/TabNavigator';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { LogBox } from 'react-native';
 
 LogBox.ignoreLogs([
@@ -14,7 +15,6 @@ LogBox.ignoreLogs([
 ]);
 
 const Stack = createNativeStackNavigator();
-
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -26,7 +26,14 @@ export default function App() {
 
   return (
     <NavigationContainer>
-      {user ? <TabNavigator /> : <LoginScreen />}
+      {user ? (
+        <TabNavigator />
+      ) : (
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="Signup" component={SignupScreen} />
+        </Stack.Navigator>
+      )}
     </NavigationContainer>
   );
 }

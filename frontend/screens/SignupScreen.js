@@ -1,25 +1,42 @@
 import React, { useState } from 'react';
 import { View, TextInput, Button, Text, StyleSheet } from 'react-native';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../services/firebase';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { auth, db } from '../services/firebase';
 
-export default function LoginScreen({ navigation }) {
+export default function SignupScreen({ navigation }) {
+  const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleLogin = async () => {
+  const handleSignup = async () => {
     setError('');
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCred = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(userCred.user, { displayName });
+
+      await setDoc(doc(db, 'users', userCred.user.uid), {
+        email,
+        displayName,
+        joined: serverTimestamp(),
+      });
+
+      navigation.goBack(); // go back to login
     } catch (err) {
-      setError('Login failed. Check email or password.');
+      setError('Signup failed. Try a different email.');
     }
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+      <Text style={styles.title}>Sign Up</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Display Name"
+        value={displayName}
+        onChangeText={setDisplayName}
+      />
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -35,8 +52,8 @@ export default function LoginScreen({ navigation }) {
         onChangeText={setPassword}
       />
       {error ? <Text style={styles.error}>{error}</Text> : null}
-      <Button title="Login" onPress={handleLogin} />
-      <Button title="Sign Up" onPress={() => navigation.navigate('Signup')} />
+      <Button title="Sign Up" onPress={handleSignup} />
+      <Button title="Back to Login" onPress={() => navigation.goBack()} />
     </View>
   );
 }
