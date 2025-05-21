@@ -6,6 +6,7 @@ import { auth } from './services/firebase';
 import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
 import TabNavigator from './navigation/TabNavigator';
+import ClothingDetailScreen from './screens/ClothingDetailScreen';
 import { LogBox } from 'react-native';
 
 LogBox.ignoreLogs([
@@ -27,7 +28,10 @@ export default function App() {
   return (
     <NavigationContainer>
       {user ? (
-        <TabNavigator />
+        <Stack.Navigator screenOptions={{ headerShown: true }}>
+          <Stack.Screen name="Tabs" component={TabNavigator} options={{ headerShown: false }} />
+          <Stack.Screen name="ClothingDetail" component={ClothingDetailScreen} />
+        </Stack.Navigator>
       ) : (
         <Stack.Navigator screenOptions={{ headerShown: false }}>
           <Stack.Screen name="Login" component={LoginScreen} />
