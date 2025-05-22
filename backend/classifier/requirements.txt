@@ -1,0 +1,5 @@
+torch
+transformers
+Pillow
+ftfy
+open_clip_torch

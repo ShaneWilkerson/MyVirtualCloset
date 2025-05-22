@@ -22,6 +22,32 @@ export default function ImageUploader() {
     }
   };
 
+  const predictWithModel = async (uri) => {
+    const formData = new FormData();
+    formData.append('image', {
+      uri,
+      name: 'photo.jpg',
+      type: 'image/jpeg',
+    });
+
+    try {
+      const res = await fetch('http://192.168.86.48:5000/predict', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      const result = await res.json();
+      console.log('Model prediction:', result);
+      return result;
+    } catch (err) {
+      console.error('Model prediction failed:', err);
+      return null;
+    }
+  };
+
   const uploadImage = async () => {
     if (!imageUri) return;
 
@@ -33,6 +59,9 @@ export default function ImageUploader() {
 
     try {
       setUploading(true);
+
+      // Run prediction before uploading
+      const prediction = await predictWithModel(imageUri);
 
       const response = await fetch(imageUri);
       const blob = await response.blob();
@@ -48,9 +77,10 @@ export default function ImageUploader() {
         uid: user.uid,
         url: downloadURL,
         createdAt: Timestamp.now(),
+        prediction: prediction?.label || null,
       });
 
-      Alert.alert('Success', 'Image uploaded!');
+      Alert.alert('Success', `Image uploaded! Label: ${prediction?.label || 'Unknown'}`);
       setImageUri(null);
     } catch (err) {
       console.error('Upload failed:', JSON.stringify(err, null, 2));
