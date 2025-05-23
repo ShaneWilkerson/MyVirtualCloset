@@ -49,46 +49,53 @@ export default function ImageUploader() {
   };
 
   const uploadImage = async () => {
-    if (!imageUri) return;
+  if (!imageUri) return;
 
-    const user = getAuth().currentUser;
-    if (!user) {
-      Alert.alert('Error', 'You must be logged in to upload');
-      return;
-    }
+  const user = getAuth().currentUser;
+  if (!user) {
+    Alert.alert('Error', 'You must be logged in to upload');
+    return;
+  }
 
-    try {
-      setUploading(true);
+  try {
+    setUploading(true);
 
-      // Run prediction before uploading
-      const prediction = await predictWithModel(imageUri);
+    // 🔍 Predict from backend
+    const prediction = await predictWithModel(imageUri);
 
-      const response = await fetch(imageUri);
-      const blob = await response.blob();
+    const response = await fetch(imageUri);
+    const blob = await response.blob();
 
-      const filename = `${uuid.v4()}.jpg`;
-      const storage = getStorage();
-      const storageRef = ref(storage, `clothing/${filename}`);
+    const filename = `${uuid.v4()}.jpg`;
+    const storage = getStorage();
+    const storageRef = ref(storage, `clothing/${filename}`);
 
-      await uploadBytes(storageRef, blob);
-      const downloadURL = await getDownloadURL(storageRef);
+    await uploadBytes(storageRef, blob);
+    const downloadURL = await getDownloadURL(storageRef);
 
-      await addDoc(collection(db, 'images'), {
-        uid: user.uid,
-        url: downloadURL,
-        createdAt: Timestamp.now(),
-        prediction: prediction?.label || null,
-      });
+    //  Save prediction details to Firestore
+    await addDoc(collection(db, 'images'), {
+      uid: user.uid,
+      url: downloadURL,
+      createdAt: Timestamp.now(),
+      color: prediction?.color || null,
+      pattern: prediction?.pattern || null,
+      type: prediction?.type || null,
+    });
 
-      Alert.alert('Success', `Image uploaded! Label: ${prediction?.label || 'Unknown'}`);
-      setImageUri(null);
-    } catch (err) {
-      console.error('Upload failed:', JSON.stringify(err, null, 2));
-      Alert.alert('Upload failed', err.message || 'Unknown error');
-    } finally {
-      setUploading(false);
-    }
-  };
+    Alert.alert(
+      'Success',
+      `Image uploaded!\nType: ${prediction?.type || 'Unknown'}\nColor: ${prediction?.color || 'Unknown'}\nPattern: ${prediction?.pattern || 'Unknown'}`
+    );
+
+    setImageUri(null);
+  } catch (err) {
+    console.error('Upload failed:', JSON.stringify(err, null, 2));
+    Alert.alert('Upload failed', err.message || 'Unknown error');
+  } finally {
+    setUploading(false);
+  }
+};
 
   return (
     <View style={{ alignItems: 'center', marginTop: 20 }}>
