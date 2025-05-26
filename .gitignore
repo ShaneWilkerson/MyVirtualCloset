@@ -43,4 +43,4 @@ packager-cache/
 Thumbs.db
 
 # Misc
-coverage/
+coverage/-e "uploads/\noutputs/\nnormalized/" 

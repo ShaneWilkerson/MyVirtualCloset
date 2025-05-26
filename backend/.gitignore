@@ -1,0 +1,25 @@
+# Ignore upload/processing output folders
+uploads/
+outputs/
+normalized/
+
+# Bytecode and virtual envs
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+env/
+venv/
+.env
+
+# Log files
+*.log
+
+# System/IDE stuff
+.DS_Store
+Thumbs.db
+.vscode/
+
+# Node-related files
+node_modules/
+package-lock.json
