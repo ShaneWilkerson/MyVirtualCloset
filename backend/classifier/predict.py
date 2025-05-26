@@ -15,13 +15,13 @@ colors = [
 ]
 
 patterns = [
-    "solid", "striped", "plaid", "floral", "polka dot", 
+    "solid color nmh", "striped", "plaid", "floral", "polka dot", 
     "camouflage", "checkered", "animal print", "graphic print"
 ]
 
 types = [
-    "t-shirt", "hoodie", "tank top", "long sleeve shirt", "dress",
-    "skirt", "jeans", "shorts", "jacket", "coat", "blouse", "sweater", "sweatpants"
+    "t-shirt", "hoodie", "tank top", "long sleeve shirt", "short sleeve shirt", "dress",
+    "skirt", "jeans", "shorts", "jacket", "coat", "blouse", "sweater", "sweatpants", "long sleeve polo shirt", "short sleeve polo shirt"
 ]
 
 # Prompt templates
