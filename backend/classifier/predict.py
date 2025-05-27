@@ -15,7 +15,7 @@ colors = [
 ]
 
 patterns = [
-    "solid color nmh", "striped", "plaid", "floral", "polka dot", 
+    "solid color", "plain", "striped", "plaid", "floral", "polka dot", 
     "camouflage", "checkered", "animal print", "graphic print"
 ]
 
