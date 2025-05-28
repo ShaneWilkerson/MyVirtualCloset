@@ -9,6 +9,7 @@ import TabNavigator from './navigation/TabNavigator';
 import ClothingDetailScreen from './screens/ClothingDetailScreen';
 import { LogBox } from 'react-native';
 
+import { ThemeProvider } from './context/ThemeContext';
 LogBox.ignoreLogs([
   'AsyncStorage has been extracted from react-native core',
   'Unsupported top level event type "topInsetsChange"',
@@ -26,18 +27,24 @@ export default function App() {
   }, []);
 
   return (
-    <NavigationContainer>
-      {user ? (
-        <Stack.Navigator screenOptions={{ headerShown: true }}>
-          <Stack.Screen name="Tabs" component={TabNavigator} options={{ headerShown: false }} />
-          <Stack.Screen name="ClothingDetail" component={ClothingDetailScreen} />
-        </Stack.Navigator>
-      ) : (
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="Login" component={LoginScreen} />
-          <Stack.Screen name="Signup" component={SignupScreen} />
-        </Stack.Navigator>
-      )}
-    </NavigationContainer>
+    <ThemeProvider>
+      <NavigationContainer>
+        {user ? (
+          <Stack.Navigator screenOptions={{ headerShown: true }}>
+            <Stack.Screen
+              name="Tabs"
+              component={TabNavigator}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen name="ClothingDetail" component={ClothingDetailScreen} />
+          </Stack.Navigator>
+        ) : (
+          <Stack.Navigator screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Signup" component={SignupScreen} />
+          </Stack.Navigator>
+        )}
+      </NavigationContainer>
+    </ThemeProvider>
   );
 }

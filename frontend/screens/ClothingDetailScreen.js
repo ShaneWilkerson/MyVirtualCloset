@@ -1,31 +1,40 @@
 import React from 'react';
 import { View, Text, Image, StyleSheet, ScrollView } from 'react-native';
+import { useTheme } from '../context/ThemeContext';
 
 export default function ClothingDetailScreen({ route }) {
+  const { theme } = useTheme();
   const { item } = route.params;
 
+  const uploadedAt = item.createdAt?.seconds
+    ? new Date(item.createdAt.seconds * 1000).toLocaleString()
+    : 'Unknown';
+
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.background }]}>
       <Image source={{ uri: item.url }} style={styles.image} />
-      <Text style={styles.label}>Uploaded:</Text>
-      <Text>{new Date(item.createdAt?.seconds * 1000).toLocaleString()}</Text>
-    
+      
+      <Text style={[theme.typography.caption, { color: theme.textDim, marginTop: 10 }]}>Uploaded:</Text>
+      <Text style={[theme.typography.body, { color: theme.text }]}>{uploadedAt}</Text>
+
       {item.type && (
         <>
-          <Text style={styles.label}>Type:</Text>
-          <Text>{item.type}</Text>
+          <Text style={[theme.typography.caption, { color: theme.textDim, marginTop: 10 }]}>Type:</Text>
+          <Text style={[theme.typography.body, { color: theme.text }]}>{item.type}</Text>
         </>
       )}
+
       {item.color && (
         <>
-          <Text style={styles.label}>Color:</Text>
-          <Text>{item.color}</Text>
+          <Text style={[theme.typography.caption, { color: theme.textDim, marginTop: 10 }]}>Color:</Text>
+          <Text style={[theme.typography.body, { color: theme.text }]}>{item.color}</Text>
         </>
       )}
+
       {item.tags && Array.isArray(item.tags) && (
         <>
-          <Text style={styles.label}>Tags:</Text>
-          <Text>{item.tags.join(', ')}</Text>
+          <Text style={[theme.typography.caption, { color: theme.textDim, marginTop: 10 }]}>Tags:</Text>
+          <Text style={[theme.typography.body, { color: theme.text }]}>{item.tags.join(', ')}</Text>
         </>
       )}
     </ScrollView>
@@ -33,7 +42,15 @@ export default function ClothingDetailScreen({ route }) {
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20, alignItems: 'center' },
-  image: { width: '100%', height: 300, marginBottom: 20, borderRadius: 10 },
-  label: { fontWeight: 'bold', marginTop: 10 },
+  container: {
+    padding: 20,
+    alignItems: 'center',
+    flexGrow: 1,
+  },
+  image: {
+    width: '100%',
+    height: 300,
+    marginBottom: 20,
+    borderRadius: 10,
+  },
 });
