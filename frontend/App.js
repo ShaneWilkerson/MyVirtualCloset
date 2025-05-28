@@ -8,7 +8,8 @@ import SignupScreen from './screens/SignupScreen';
 import TabNavigator from './navigation/TabNavigator';
 import ClothingDetailScreen from './screens/ClothingDetailScreen';
 import { LogBox } from 'react-native';
-
+import MenuScreen from './screens/MenuScreen';
+import UploadScreen from './screens/UploadScreen';
 import { ThemeProvider } from './context/ThemeContext';
 LogBox.ignoreLogs([
   'AsyncStorage has been extracted from react-native core',
@@ -36,6 +37,8 @@ export default function App() {
               component={TabNavigator}
               options={{ headerShown: false }}
             />
+            <Stack.Screen name="Menu" component={MenuScreen} />
+            <Stack.Screen name="Upload" component={UploadScreen} />
             <Stack.Screen name="ClothingDetail" component={ClothingDetailScreen} />
           </Stack.Navigator>
         ) : (

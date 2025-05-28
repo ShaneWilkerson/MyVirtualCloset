@@ -14,6 +14,34 @@ export const lightTheme = {
     body: { fontFamily: 'Inter', fontSize: 16, fontWeight: '400' },
     caption: { fontFamily: 'Inter', fontSize: 12, fontWeight: '500' },
   },
+  spacing: {
+    xs: 4,
+    sm: 8,
+    md: 16,
+    lg: 24,
+    xl: 32,
+  },
+  radius: {
+    sm: 4,
+    md: 8,
+    lg: 16,
+  },
+  shadow: {
+    light: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.1,
+      shadowRadius: 3,
+      elevation: 2,
+    },
+    medium: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 6,
+      elevation: 4,
+    },
+  },
 };
 
 export const darkTheme = {
@@ -31,5 +59,33 @@ export const darkTheme = {
     subheadline: { fontFamily: 'Inter', fontSize: 18, fontWeight: '500' },
     body: { fontFamily: 'Inter', fontSize: 16, fontWeight: '400' },
     caption: { fontFamily: 'Inter', fontSize: 12, fontWeight: '500' },
+  },
+  spacing: {
+    xs: 4,
+    sm: 8,
+    md: 16,
+    lg: 24,
+    xl: 32,
+  },
+  radius: {
+    sm: 4,
+    md: 8,
+    lg: 16,
+  },
+  shadow: {
+    light: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.3,
+      shadowRadius: 3,
+      elevation: 2,
+    },
+    medium: {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.4,
+      shadowRadius: 6,
+      elevation: 4,
+    },
   },
 };

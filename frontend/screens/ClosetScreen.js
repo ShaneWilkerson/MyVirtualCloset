@@ -3,6 +3,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { View, Text, FlatList, Image, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
 import { db, auth } from '../services/firebase';
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTheme } from '../context/ThemeContext';
 
 const screenWidth = Dimensions.get('window').width;
@@ -13,11 +14,16 @@ export default function ClosetScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const { theme } = useTheme();
 
-  useLayoutEffect(() => {
+useLayoutEffect(() => {
   navigation.setOptions({
     headerStyle: { backgroundColor: theme.surface },
     headerTitleStyle: theme.typography.headline,
     headerTintColor: theme.primary,
+    headerRight: () => (
+      <TouchableOpacity onPress={() => navigation.navigate('Upload')}>
+        <MaterialCommunityIcons name="plus" size={24} color={theme.primary} style={{ marginRight: 16 }} />
+      </TouchableOpacity>
+    ),
   });
 }, [navigation, theme]);
 
