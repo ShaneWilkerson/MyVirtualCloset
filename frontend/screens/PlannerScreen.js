@@ -4,146 +4,147 @@ import { useTheme } from '../context/ThemeContext';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 export default function PlannerScreen({ navigation }) {
-  const { theme } = useTheme();
+    const { theme } = useTheme();
 
-  const today = new Date().toLocaleDateString(undefined, {
-    weekday: 'long',
-    month: 'long',
-    day: 'numeric',
-  });
+    const today = new Date().toLocaleDateString(undefined, {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+    });
 
-  const weekOutfits = Array.from({ length: 7 }).map((_, i) => ({
-    day: `Day ${i + 1}`,
-    outfitImage: null,
-  }));
+    const weekOutfits = Array.from({ length: 7 }).map((_, i) => ({
+        day: `Day ${i + 1}`,
+        outfitImage: null,
+    }));
 
-  return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
-      
-      {/* Top Right Menu Button */}
-      <TouchableOpacity
-        style={styles.menuButton}
-        onPress={() => navigation.navigate('Menu')}
-      >
-        <MaterialCommunityIcons name="menu" size={28} color={theme.text} />
-      </TouchableOpacity>
+    return (
+        <View style={[styles.container, { backgroundColor: theme.background }]}>
 
-      {/* Greeting */}
-      <Text style={[theme.typography.headline, styles.title]}>{`Hello!`}</Text>
-      <Text style={[theme.typography.subheadline, styles.subtitle]}>{today}</Text>
+            {/* Top Row */}
+            <View style={styles.topRow}>
+                <View>
+                    <Text style={[theme.typography.headline, { color: theme.text }]}>Hello!</Text>
+                    <Text style={[theme.typography.caption, { color: theme.textDim }]}>{today}</Text>
+                </View>
 
-      {/* Avatar + Today's Outfit */}
-      <View style={styles.avatarOutfitContainer}>
-        <Image
-          source={require('../assets/avatar-placeholder.png')}
-          style={styles.avatar}
-        />
-        <Text style={[theme.typography.body, { color: theme.text }]}>Today's Outfit</Text>
-        <Image
-          source={require('../assets/outfit-placeholder.png')}
-          style={styles.outfitImage}
-        />
-      </View>
-
-      {/* Scrollable Week Plan */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.weekScroll}
-        contentContainerStyle={styles.scrollContent}
-      >
-        {weekOutfits.map((day, idx) => (
-          <TouchableOpacity key={idx} style={styles.dayCard}>
-            <Text style={[theme.typography.caption, { color: theme.text }]}>{day.day}</Text>
-            <View style={styles.outfitPreview}>
-              {day.outfitImage ? (
-                <Image source={{ uri: day.outfitImage }} style={styles.outfitPreviewImage} />
-              ) : (
-                <MaterialCommunityIcons name="tshirt-crew" size={36} color={theme.textDim} />
-              )}
+                <TouchableOpacity
+                    style={styles.profileButton}
+                    onPress={() => navigation.navigate('Profile')}
+                >
+                    <MaterialCommunityIcons name="account-circle" size={36} color={theme.text} />
+                </TouchableOpacity>
             </View>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
 
-      {/* Suggest Outfit Button */}
-      <TouchableOpacity
-        style={[styles.suggestButton, { backgroundColor: theme.primary }]}
-        onPress={() => navigation.navigate('SuggestedOutfit')}
-      >
-        <Text style={[theme.typography.body, { color: theme.surface }]}>Suggest Outfit</Text>
-      </TouchableOpacity>
-    </View>
-  );
+            {/* Today's Outfit with Avatar */}
+            <View style={styles.todayContainer}>
+                <View style={styles.todayInfo}>
+                    <Text style={[theme.typography.subheadline, { color: theme.text }]}>Today's Outfit</Text>
+                    <Image
+                        source={require('../assets/outfitPlaceholder.png')}
+                        style={styles.outfitImage}
+                    />
+                </View>
+            </View>
+
+            {/* Scrollable Week Plan */}
+            <Text style={[theme.typography.subheadline, { color: theme.text, marginBottom: 8 }]}>
+                Next Week's Outfits
+            </Text>
+            <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.weekScroll}
+                contentContainerStyle={styles.scrollContent}
+            >
+                {weekOutfits.map((day, idx) => (
+                    <TouchableOpacity key={idx} style={[styles.dayCard, { backgroundColor: theme.surface }]}>
+                        <Text style={[theme.typography.caption, { color: theme.text }]}>{day.day}</Text>
+                        <View style={styles.outfitPreview}>
+                            <Image
+                                source={require('../assets/outfitPlaceholder.png')}
+                                style={styles.outfitPreviewImage}
+                            />
+                        </View>
+                    </TouchableOpacity>
+                ))}
+            </ScrollView>
+
+            {/* Suggest Outfit Button */}
+            <TouchableOpacity
+                style={[styles.suggestButton, { backgroundColor: theme.primary }]}
+                onPress={() => navigation.navigate('SuggestedOutfit')}
+            >
+                <Text style={[theme.typography.body, { color: theme.surface }]}>Suggest Outfit</Text>
+            </TouchableOpacity>
+        </View>
+    );
 }
 
-
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 60,
-    paddingHorizontal: 20,
-  },
-  menuButton: {
-    position: 'absolute',
-    right: 20,
-    top: 50,
-    zIndex: 2,
-  },
-  title: {
-    marginTop: 10,
-    color: 'black',
-  },
-  subtitle: {
-    marginBottom: 20,
-    color: 'gray',
-  },
-  avatarOutfitContainer: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    marginBottom: 10,
-    backgroundColor: '#ccc',
-  },
-  outfitImage: {
-    width: 120,
-    height: 150,
-    borderRadius: 8,
-    marginTop: 10,
-    backgroundColor: '#ddd',
-  },
-  weekScroll: {
-    marginBottom: 20,
-  },
-  scrollContent: {
-    paddingHorizontal: 10,
-  },
-  dayCard: {
-    alignItems: 'center',
-    marginRight: 16,
-  },
-  outfitPreview: {
-    width: 60,
-    height: 80,
-    backgroundColor: '#eee',
-    borderRadius: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  outfitPreviewImage: {
-    width: '100%',
-    height: '100%',
-    borderRadius: 8,
-  },
-  suggestButton: {
-    alignSelf: 'center',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
+    container: {
+        flex: 1,
+        paddingTop: 45,
+        paddingHorizontal: 20,
+    },
+    topRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 24,
+    },
+    profileButton: {
+        padding: 4,
+    },
+    todayContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginBottom: 28,
+    },
+    todayInfo: {
+        flex: 1,
+        alignItems: 'center',
+        marginBottom: 30,
+    },
+    outfitImage: {
+        width: 320,
+        height: 320,
+        borderRadius: 8,
+        marginTop: 10,
+        backgroundColor: '#ddd',
+    },
+    weekScroll: {
+        marginBottom: 20,
+    },
+    scrollContent: {
+        paddingHorizontal: 4,
+    },
+    dayCard: {
+        width: 80,
+        alignItems: 'center',
+        marginRight: 12,
+        padding: 8,
+        borderRadius: 10,
+    },
+    outfitPreview: {
+        width: 65,
+        height: 85,
+        borderRadius: 8,
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginTop: 6,
+        backgroundColor: '#eee',
+    },
+    outfitPreviewImage: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 8,
+    },
+    suggestButton: {
+        alignSelf: 'center',
+        paddingHorizontal: 32,
+        paddingVertical: 12,
+        borderRadius: 10,
+        elevation: 2,
+        marginBottom: 10,
+    },
 });

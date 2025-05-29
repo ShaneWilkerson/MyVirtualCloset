@@ -5,7 +5,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { signOut } from 'firebase/auth';
 import { auth } from '../services/firebase';
 
-export default function MenuScreen({ navigation }) {
+export default function SettingsScreen({ navigation }) {
   const { theme, mode, toggleTheme } = useTheme();
 
   const handleLogout = async () => {
@@ -17,7 +17,7 @@ export default function MenuScreen({ navigation }) {
       style={[styles.container, { backgroundColor: theme.background }]}
       contentContainerStyle={styles.content}
     >
-      <Text style={[theme.typography.headline, { color: theme.text, marginBottom: 24 }]}>Menu</Text>
+      <Text style={[theme.typography.headline, { color: theme.text, marginBottom: 24 }]}>Settings</Text>
 
       {/* Profile Info */}
       <View style={styles.section}>
