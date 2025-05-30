@@ -1,8 +1,16 @@
-import React, { useLayoutEffect } from 'react';
-import { useEffect, useState, useCallback } from 'react';
-import { View, Text, FlatList, Image, StyleSheet, Dimensions, TouchableOpacity } from 'react-native';
+import React, { useLayoutEffect, useEffect, useState, useCallback } from 'react';
+import {
+  View,
+  Text,
+  FlatList,
+  Image,
+  StyleSheet,
+  Dimensions,
+  TouchableOpacity,
+} from 'react-native';
 import { db, auth } from '../services/firebase';
 import { collection, query, where, orderBy, getDocs } from 'firebase/firestore';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTheme } from '../context/ThemeContext';
 
 const screenWidth = Dimensions.get('window').width;
@@ -11,15 +19,16 @@ const imageSize = (screenWidth - 30) / 2;
 export default function ClosetScreen({ navigation }) {
   const [images, setImages] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [showFab, setShowFab] = useState(true);
   const { theme } = useTheme();
 
   useLayoutEffect(() => {
-  navigation.setOptions({
-    headerStyle: { backgroundColor: theme.surface },
-    headerTitleStyle: theme.typography.headline,
-    headerTintColor: theme.primary,
-  });
-}, [navigation, theme]);
+    navigation.setOptions({
+      headerStyle: { backgroundColor: theme.surface },
+      headerTitleStyle: theme.typography.headline,
+      headerTintColor: theme.primary,
+    });
+  }, [navigation, theme]);
 
   const fetchClothing = async () => {
     try {
@@ -54,6 +63,16 @@ export default function ClosetScreen({ navigation }) {
     fetchClothing();
   }, []);
 
+  let currentOffset = 0;
+  const handleScroll = (event) => {
+    const newOffset = event.nativeEvent.contentOffset.y;
+    const goingDown = newOffset > currentOffset;
+    if (goingDown !== !showFab) {
+      setShowFab(!goingDown);
+    }
+    currentOffset = newOffset;
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <FlatList
@@ -62,6 +81,8 @@ export default function ClosetScreen({ navigation }) {
         numColumns={2}
         refreshing={refreshing}
         onRefresh={onRefresh}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
         contentContainerStyle={styles.listContent}
         ListEmptyComponent={
           <Text style={[theme.typography.body, { color: theme.textDim, textAlign: 'center', marginTop: 40 }]}>
@@ -83,6 +104,15 @@ export default function ClosetScreen({ navigation }) {
           </TouchableOpacity>
         )}
       />
+
+      {showFab && (
+        <TouchableOpacity
+          style={[styles.fab, { backgroundColor: theme.primary }]}
+          onPress={() => navigation.navigate('Upload')}
+        >
+          <MaterialCommunityIcons name="plus" size={28} color={theme.surface} />
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -100,5 +130,20 @@ const styles = StyleSheet.create({
     margin: 5,
     borderRadius: 12,
     borderWidth: 1,
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
   },
 });

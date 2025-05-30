@@ -9,12 +9,10 @@ export async function uploadClothingImage({ base64Image, prediction }) {
   const user = getAuth().currentUser;
   if (!user) throw new Error('You must be logged in.');
 
-  // Remove "data:image/png;base64," prefix if it exists
   const base64 = base64Image.startsWith('data:')
     ? base64Image.split(',')[1]
     : base64Image;
 
-  // Save base64 image to a temporary PNG file
   const filename = `${uuid.v4()}.png`;
   const fileUri = FileSystem.cacheDirectory + filename;
 
@@ -26,7 +24,8 @@ export async function uploadClothingImage({ base64Image, prediction }) {
   const blob = await response.blob();
 
   const storage = getStorage();
-  const storageRef = ref(storage, `clothing/${filename}`);
+  const storagePath = `clothing/${filename}`;
+  const storageRef = ref(storage, storagePath);
 
   await uploadBytesResumable(storageRef, blob);
   const downloadURL = await getDownloadURL(storageRef);
@@ -34,6 +33,7 @@ export async function uploadClothingImage({ base64Image, prediction }) {
   await addDoc(collection(db, 'images'), {
     uid: user.uid,
     url: downloadURL,
+    path: storagePath, // ✅ Added
     createdAt: Timestamp.now(),
     color: prediction.color,
     pattern: prediction.pattern,

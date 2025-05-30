@@ -1,28 +1,26 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Screen1 from '../screens/Screen1';
-import Screen2 from '../screens/Screen2';
-import UploadScreen from '../screens/UploadScreen';
 import ClosetScreen from '../screens/ClosetScreen';
-import LogoutScreen from '../screens/LogoutScreen';
+import OutfitsScreen from '../screens/OutfitsScreen';
+import SocialScreen from '../screens/SocialScreen';
 import { useTheme } from '../context/ThemeContext';
+import PlannerScreen from '../screens/PlannerScreen';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const Tab = createBottomTabNavigator();
 
 export default function TabNavigator() {
-  const { theme } = useTheme(); 
+  const { theme } = useTheme();
 
   return (
     <Tab.Navigator
+      initialRouteName="Planner"
       screenOptions={{
         headerStyle: {
-          backgroundColor: theme.background, // tab header background
+          backgroundColor: theme.surface,
         },
-        headerTitleStyle: {
-          color: theme.text, // title color
-        },
-        headerTintColor: theme.primary, // icon tint
+        headerTitleStyle: theme.typography.headline,
+        headerTintColor: theme.primary,
         tabBarStyle: {
           backgroundColor: theme.surface,
           borderTopColor: theme.border,
@@ -32,32 +30,15 @@ export default function TabNavigator() {
       }}
     >
       <Tab.Screen
-        name="Calendar"
-        component={Screen1}
-        options={{
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="calendar-month" color={color} size={size} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Social"
-        component={Screen2}
-        options={{
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="account-group" color={color} size={size} />
-          ),
-        }}
-      />
-      <Tab.Screen
-        name="Upload"
-        component={UploadScreen}
-        options={{
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="cloud-upload" color={color} size={size} />
-          ),
-        }}
-      />
+  name="Planner"
+  component={PlannerScreen}
+  options={{
+    headerShown: false, //hides the header 
+    tabBarIcon: ({ color, size }) => (
+      <MaterialCommunityIcons name="calendar-month" color={color} size={size} />
+    ),
+  }}
+/>
       <Tab.Screen
         name="Closet"
         component={ClosetScreen}
@@ -68,11 +49,20 @@ export default function TabNavigator() {
         }}
       />
       <Tab.Screen
-        name="Logout"
-        component={LogoutScreen}
+        name="Outfits"
+        component={OutfitsScreen}
         options={{
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="logout" color={color} size={size} />
+            <MaterialCommunityIcons name="tshirt-crew" color={color} size={size} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="Social"
+        component={SocialScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="account-group" color={color} size={size} />
           ),
         }}
       />
