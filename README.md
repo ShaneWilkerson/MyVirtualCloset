@@ -12,10 +12,11 @@
 
 ## 🏠 1. Planner Screen (Home)
 - Avatar display with **today’s outfit**
-- Horizontal scroll for **week/month planner**
+- Horizontal scroll for **week outfits**
 - “Suggest Outfit” button (AI-powered)
 - Outfit preview updates avatar
-- Tap on date to create/edit outfit
+- Tap on day to open outfit screen for that day (edit/create)
+- Tap on Calandar Icon to open Calandar
 
 ---
 
@@ -38,6 +39,7 @@
   - “Surprise Me”
   - “Improve This Outfit”
 - Option to apply outfit to calendar day
+- Option to Save outfit to collection
 
 ---
 
@@ -50,30 +52,27 @@
 
 ---
 
-## ☰ 5. Menu Screen
-Grouped UI with sub-pages:
+## 👤 5. Profile Screen
 
-### 🔹 Profile
-- Avatar, display name, stats
-- Edit name/picture
+Central hub for user account details and settings.
 
-### 🔹 Closet Stats
-- Total items
-- Most worn
-- Outfit reuse rates
+### 🔹 Overview
+- User avatar and display name
+- Closet statistics summary (e.g., total items, favorite color)
+- Tap avatar or name to enter edit mode (future)
 
-### 🔹 Settings
-- Dark/light mode toggle
-- Notification settings (future)
-- Email/password update
+### 🔹 Settings (nested within Profile)
+- Toggle dark/light mode
+- Update email/password (future)
 - Sign out
+- (Future) Enable/disable notifications
 
-### 🔹 Wishlist & Inspiration
-- Saved items from Social
+### 🔹 Wishlist & Inspiration (planned)
+- Saved clothing items from Social feed
 - Inspiration outfits
-- “Try this look” option
+- “Try this look” feature
 
-### 🔹 Feedback
+### 🔹 Feedback (planned)
 - Submit app suggestions or bug reports
 
 ---
@@ -88,11 +87,11 @@ Each document is a user profile.
 **Document ID:** `uid` (from Firebase Auth)
 
 ### Fields:
-| Field           | Type     | Description                      |
-|-----------------|----------|----------------------------------|
-| `email`         | string   | User's email from Firebase Auth  |
-| `joined`        | timestamp| Time the account was created     |
-| `displayName`   | string   | Display name                     |
+| Field         | Type      | Description                             |
+|---------------|-----------|-----------------------------------------|
+| `email`       | string    | User's email from Firebase Auth         |
+| `joined`      | timestamp | Time the account was created            |
+| `displayName` | string    | Display name                            |
 
 ---
 
@@ -103,13 +102,53 @@ Flat collection of all clothing images.
 **Document ID:** Auto-generated
 
 ### Fields:
-| Field       | Type      | Description                                        |
-|-------------|-----------|----------------------------------------------------|
-| `uid`       | string    | UID of the uploading user                          |
-| `url`       | string    | Firebase Storage download URL                      |
-| `createdAt` | timestamp | Upload date                                        |
-| `color`     | string    | Detected or user-assigned color (e.g., "blue")     |
-| `pattern`   | string    | Detected or user-assigned pattern (e.g., "plaid")  |
-| `type`      | string    | Clothing type (e.g., "shirt", "pants", "jacket")   |
+| Field       | Type      | Description                                         |
+|-------------|-----------|-----------------------------------------------------|
+| `uid`       | string    | UID of the uploading user                           |
+| `url`       | string    | Firebase Storage download URL                       |
+| `path`      | string    | Firebase Storage path (e.g., `clothing/xyz.png`)    |
+| `createdAt` | timestamp | Upload date                                         |
+| `color`     | string    | Detected or user-assigned color (e.g., "blue")      |
+| `pattern`   | string    | Detected or user-assigned pattern (e.g., "plaid")   |
+| `type`      | string    | Clothing type (e.g., "shirt", "pants", "jacket")    |
+
+---
+
+## `outfits` Collection
+
+User-created saved outfits. These are reusable and can be applied to any date.
+
+**Document ID:** Auto-generated
+
+### Fields:
+| Field       | Type      | Description                                         |
+|-------------|-----------|-----------------------------------------------------|
+| `uid`       | string    | UID of the user who created the outfit              |
+| `name`      | string    | Optional name for the outfit (e.g., "Date Night")   |
+| `topId`     | string    | ID of the top image item                            |
+| `bottomId`  | string    | ID of the bottom image item                         |
+| `extrasIds` | array     | Array of additional item IDs (e.g., shoes, hats)    |
+| `tags`      | array     | Optional tags or labels (e.g., ["casual", "fall"])  |
+| `createdAt` | timestamp | Date the outfit was saved                           |
+
+---
+
+## `outfitPlans` Collection
+
+Daily outfit plans linked to a specific calendar day. Can reference a saved outfit or define one directly.
+
+**Document ID:** `YYYY-MM-DD` (ISO date format)
+
+### Fields:
+| Field       | Type      | Description                                                  |
+|-------------|-----------|--------------------------------------------------------------|
+| `uid`       | string    | UID of the user                                              |
+| `date`      | string    | Date in `YYYY-MM-DD` format                                  |
+| `outfitRef` | string    | (Optional) ID of a saved outfit from the `outfits` collection |
+| `topId`     | string    | (Optional) ID of top item                                    |
+| `bottomId`  | string    | (Optional) ID of bottom item                                 |
+| `extrasIds` | array     | (Optional) Array of extra item IDs                           |
+| `notes`     | string    | (Optional) User-added notes for the day’s outfit             |
+| `createdAt` | timestamp | Timestamp when this day plan was created or last edited      |
 
 ---
