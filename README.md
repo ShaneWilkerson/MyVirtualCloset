@@ -6,7 +6,6 @@
 | Closet       | Wardrobe with filters, stats, and item access  |
 | Outfits      | Build, save, and view outfits; AI suggestions  |
 | Social       | Explore, follow, and post/shared outfits       |
-| Menu         | Profile, stats, settings, wishlist, feedback   |
 
 ---
 
