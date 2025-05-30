@@ -47,9 +47,14 @@ export default function PlannerScreen({ navigation }) {
             </View>
 
             {/* Scrollable Week Plan */}
-            <Text style={[theme.typography.subheadline, { color: theme.text, marginBottom: 8 }]}>
-                Next Week's Outfits
-            </Text>
+            <View style={styles.weekHeader}>
+                <Text style={[theme.typography.subheadline, { color: theme.text }]}>
+                    Next Week's Outfits
+                </Text>
+                <TouchableOpacity onPress={() => navigation.navigate('Calendar')}>
+                    <MaterialCommunityIcons name="calendar-month-outline" size={24} color={theme.text} />
+                </TouchableOpacity>
+            </View>
             <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -146,5 +151,12 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         elevation: 2,
         marginBottom: 10,
+    },
+    weekHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 8,
+        paddingHorizontal: 4,
     },
 });

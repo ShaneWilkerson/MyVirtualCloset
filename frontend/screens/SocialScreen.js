@@ -12,7 +12,7 @@ export default function SocialScreen({ navigation }) {
       </Text>
 
       <Text style={[theme.typography.body, { color: theme.textDim }]}>
-        This will show shared outfits, friends’ activity, and community features.
+        This will show shared outfits, friends activity, and community features.
       </Text>
     </View>
   );

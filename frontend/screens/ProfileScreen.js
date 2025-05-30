@@ -11,7 +11,7 @@ export default function ProfileScreen({ navigation }) {
       {/* Profile Header */}
       <View style={styles.profileHeader}>
         <Image
-          source={{ uri: 'https://placehold.co/100x100.png' }} // Replace with real user image if available
+          source={{ uri: 'https://placehold.co/100x100.png' }} // Replace with real user image
           style={styles.avatar}
         />
         <View>
@@ -30,14 +30,6 @@ export default function ProfileScreen({ navigation }) {
           Settings
         </Text>
       </TouchableOpacity>
-
-      {/* Other options you might want to add */}
-      {/* <TouchableOpacity style={styles.option}>
-        <MaterialCommunityIcons name="tshirt-crew" size={24} color={theme.text} />
-        <Text style={[theme.typography.body, { color: theme.text, marginLeft: 12 }]}>
-          My Clothing
-        </Text>
-      </TouchableOpacity> */}
     </View>
   );
 }

@@ -1,10 +1,10 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import PlannerScreen from '../screens/PlannerScreen';
 import ClosetScreen from '../screens/ClosetScreen';
 import OutfitsScreen from '../screens/OutfitsScreen';
 import SocialScreen from '../screens/SocialScreen';
 import { useTheme } from '../context/ThemeContext';
+import PlannerScreen from '../screens/PlannerScreen';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const Tab = createBottomTabNavigator();
