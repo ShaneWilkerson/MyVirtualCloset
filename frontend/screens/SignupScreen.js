@@ -22,6 +22,11 @@ export default function SignupScreen({ navigation }) {
         email,
         displayName,
         joined: serverTimestamp(),
+        isPublic: true, // Default to public profile for new users
+        followers: [], // Array of user IDs who follow this user
+        following: [], // Array of user IDs this user is following
+        pendingFollowers: [], // Array of user IDs who requested to follow (for private profiles)
+        outfits: 0, // Count of user's outfits
       });
 
       navigation.goBack();

@@ -1,11 +1,14 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { TouchableOpacity } from 'react-native';
 import ClosetScreen from '../screens/ClosetScreen';
 import OutfitsScreen from '../screens/OutfitsScreen';
 import SocialScreen from '../screens/SocialScreen';
 import { useTheme } from '../context/ThemeContext';
 import PlannerScreen from '../screens/PlannerScreen';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import SearchScreen from '../screens/SearchScreen';
+import UserProfileScreen from '../screens/UserProfileScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -60,12 +63,44 @@ export default function TabNavigator() {
       <Tab.Screen
         name="Social"
         component={SocialScreen}
-        options={{
+        options={({ navigation }) => ({
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="account-group" color={color} size={size} />
           ),
-        }}
+          // Add header icons for notifications and settings
+          headerLeft: () => (
+            <TouchableOpacity 
+              style={{ marginLeft: 16 }}
+              onPress={() => {
+                // Navigate to NotificationsScreen to view follow requests and notifications
+                navigation.navigate('Notifications');
+              }}
+              activeOpacity={0.7}
+            >
+              <MaterialCommunityIcons 
+                name="bell-outline" 
+                size={24} 
+                color={theme.primary} 
+              />
+            </TouchableOpacity>
+          ),
+          headerRight: () => (
+            <TouchableOpacity 
+              style={{ marginRight: 16 }}
+              onPress={() => navigation.navigate('SocialSettings')}
+              activeOpacity={0.7}
+            >
+              <MaterialCommunityIcons 
+                name="cog" 
+                size={24} 
+                color={theme.primary} 
+              />
+            </TouchableOpacity>
+          ),
+        })}
       />
+      <Tab.Screen name="Search" component={SearchScreen} options={{ headerShown: false, tabBarButton: () => null }} />
+      <Tab.Screen name="UserProfile" component={UserProfileScreen} options={{ headerShown: false, tabBarButton: () => null }} />
     </Tab.Navigator>
   );
 }
