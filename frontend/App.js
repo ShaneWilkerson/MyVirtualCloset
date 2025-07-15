@@ -18,6 +18,8 @@ import { ThemeProvider } from './context/ThemeContext';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import SearchScreen from './screens/SearchScreen';
 import UserProfileScreen from './screens/UserProfileScreen';
+import FollowersScreen from './screens/FollowersScreen';
+import FollowingScreen from './screens/FollowingScreen';
 LogBox.ignoreLogs([
   'AsyncStorage has been extracted from react-native core',
   'Unsupported top level event type "topInsetsChange"',
@@ -62,6 +64,8 @@ export default function App() {
             />
             <Stack.Screen name="Search" component={SearchScreen} options={{ headerShown: false }} />
             <Stack.Screen name="UserProfile" component={UserProfileScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="Followers" component={FollowersScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="Following" component={FollowingScreen} options={{ headerShown: false }} />
             </Stack.Navigator>
           ) : (
             <Stack.Navigator screenOptions={{ headerShown: false }}>

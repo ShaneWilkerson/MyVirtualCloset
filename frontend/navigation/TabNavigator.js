@@ -9,6 +9,8 @@ import PlannerScreen from '../screens/PlannerScreen';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import SearchScreen from '../screens/SearchScreen';
 import UserProfileScreen from '../screens/UserProfileScreen';
+import FollowersScreen from '../screens/FollowersScreen';
+import FollowingScreen from '../screens/FollowingScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -101,6 +103,8 @@ export default function TabNavigator() {
       />
       <Tab.Screen name="Search" component={SearchScreen} options={{ headerShown: false, tabBarButton: () => null }} />
       <Tab.Screen name="UserProfile" component={UserProfileScreen} options={{ headerShown: false, tabBarButton: () => null }} />
+      <Tab.Screen name="Followers" component={FollowersScreen} options={{ headerShown: false, tabBarButton: () => null }} />
+      <Tab.Screen name="Following" component={FollowingScreen} options={{ headerShown: false, tabBarButton: () => null }} />
     </Tab.Navigator>
   );
 }

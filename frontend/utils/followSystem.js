@@ -50,6 +50,14 @@ export const followUser = async (targetUserId) => {
         following: arrayUnion(targetUserId)
       });
 
+      // Create a follow notification for the followed user
+      await addDoc(collection(db, 'notifications'), {
+        type: 'follow',
+        to: targetUserId,
+        from: currentUser.uid,
+        timestamp: serverTimestamp(),
+      });
+
       return { success: true, message: 'Successfully followed user' };
     } else {
       // Private profile - send follow request
@@ -57,7 +65,7 @@ export const followUser = async (targetUserId) => {
         pendingFollowers: arrayUnion(currentUser.uid)
       });
 
-      // Create notification for the target user
+      // Create notification for the target user (optional: for follow requests)
       await addDoc(collection(db, 'notifications'), {
         to: targetUserId,
         from: currentUser.uid,
@@ -65,6 +73,8 @@ export const followUser = async (targetUserId) => {
         timestamp: serverTimestamp(),
         message: `${currentUser.displayName || 'Someone'} wants to follow you`
       });
+
+      // Also create a follow notification for private accounts when accepted (handled elsewhere)
 
       return { success: true, message: 'Follow request sent' };
     }

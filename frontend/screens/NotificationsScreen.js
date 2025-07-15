@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, Alert, Platform, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import { auth, db } from '../services/firebase';
@@ -7,8 +7,10 @@ import {
   collection, 
   query, 
   where, 
+  orderBy,
   onSnapshot, 
   doc, 
+  getDoc,
   updateDoc, 
   deleteDoc,
   arrayUnion,
@@ -16,34 +18,56 @@ import {
   serverTimestamp 
 } from 'firebase/firestore';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
+dayjs.extend(relativeTime);
 
 export default function NotificationsScreen({ navigation }) {
   const { theme } = useTheme();
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [userInfos, setUserInfos] = useState({}); // Cache for userId -> {displayName, photoURL}
 
-  // Load notifications for current user when component mounts
+  // Load notifications for current user, newest first
   useEffect(() => {
     const currentUser = auth.currentUser;
     if (!currentUser) return;
 
-    // Set up real-time listener for notifications
+    // Query notifications ordered by timestamp descending
     const notificationsQuery = query(
       collection(db, 'notifications'),
-      where('to', '==', currentUser.uid)
+      where('to', '==', currentUser.uid),
+      orderBy('timestamp', 'desc')
     );
 
-    const unsubscribe = onSnapshot(notificationsQuery, (snapshot) => {
+    const unsubscribe = onSnapshot(notificationsQuery, async (snapshot) => {
       const notificationsList = [];
+      const userUids = new Set();
+      const now = dayjs();
       snapshot.forEach((doc) => {
-        notificationsList.push({
-          id: doc.id,
-          ...doc.data()
-        });
+        const data = doc.data();
+        // Only show notifications from the last 30 days
+        if (data.timestamp && now.diff(dayjs(data.timestamp.toDate()), 'day') <= 30) {
+          notificationsList.push({
+            id: doc.id,
+            ...data
+          });
+          if (data.from) userUids.add(data.from);
+          if (data.to) userUids.add(data.to);
+        }
       });
-      
-      // Sort by timestamp (newest first)
-      notificationsList.sort((a, b) => b.timestamp?.toDate() - a.timestamp?.toDate());
+      // Fetch display names and photoURLs for all unique UIDs
+      const infoMap = { ...userInfos };
+      await Promise.all(Array.from(userUids).map(async (uid) => {
+        if (!infoMap[uid]) {
+          const userDoc = await getDoc(doc(db, 'users', uid));
+          infoMap[uid] = userDoc.exists() ? {
+            displayName: userDoc.data().displayName || 'User',
+            photoURL: userDoc.data().photoURL || null
+          } : { displayName: 'User', photoURL: null };
+        }
+      }));
+      setUserInfos(infoMap);
       setNotifications(notificationsList);
       setLoading(false);
     }, (error) => {
@@ -54,7 +78,12 @@ export default function NotificationsScreen({ navigation }) {
     return () => unsubscribe();
   }, []);
 
-  // Function to handle accepting a follow request
+  // Function to handle tapping a username in a notification
+  const handleUserTap = (uid) => {
+    navigation.navigate('UserProfile', { userId: uid });
+  };
+
+  // Function to handle accepting a follow request (if you keep private accounts)
   const handleAcceptFollow = async (notification) => {
     try {
       const currentUser = auth.currentUser;
@@ -84,7 +113,7 @@ export default function NotificationsScreen({ navigation }) {
     }
   };
 
-  // Function to handle denying a follow request
+  // Function to handle denying a follow request (if you keep private accounts)
   const handleDenyFollow = async (notification) => {
     try {
       const currentUser = auth.currentUser;
@@ -106,54 +135,49 @@ export default function NotificationsScreen({ navigation }) {
     }
   };
 
-  // Function to render each notification item
+  // Render each notification item
   const renderNotification = ({ item }) => {
-    if (item.type === 'follow_request') {
+    // Show follow notifications with avatar and tappable username (no underline)
+    if (item.type === 'follow') {
+      // Determine who is the other user
+      const isMe = item.from === auth.currentUser.uid;
+      const otherUid = isMe ? item.to : item.from;
+      const otherUser = userInfos[otherUid] || {};
+      // Format time ago
+      const timeAgo = item.timestamp ? dayjs(item.timestamp.toDate()).fromNow() : '';
       return (
-        <View style={[styles.notificationItem, { backgroundColor: theme.surface }]}>
-          {/* User avatar placeholder */}
-          <View style={[styles.avatarPlaceholder, { backgroundColor: theme.primary }]}>
-            <MaterialCommunityIcons 
-              name="account" 
-              size={24} 
-              color={theme.background} 
-            />
-          </View>
-
-          {/* Notification content */}
-          <View style={styles.notificationContent}>
-            <Text style={[theme.typography.body, { color: theme.text }]}>
-              <Text style={{ fontWeight: '600' }}>@{item.from}</Text> wants to follow you
+        <View style={[styles.notificationItem, { backgroundColor: theme.surface }]}> 
+          {/* Avatar on the left */}
+          {otherUser.photoURL ? (
+            <Image source={{ uri: otherUser.photoURL }} style={styles.avatar} />
+          ) : (
+            <View style={[styles.avatar, { backgroundColor: theme.primary, alignItems: 'center', justifyContent: 'center' }]}> 
+              <MaterialCommunityIcons name="account" size={24} color={theme.background} />
+            </View>
+          )}
+          {/* Message with tappable username (purple, no underline) */}
+          <View style={{ flex: 1, marginLeft: 12 }}>
+            <Text style={[theme.typography.body, { color: theme.text }]}> 
+              {isMe ? (
+                <>
+                  You have started following{' '}
+                  <TouchableOpacity onPress={() => handleUserTap(item.to)} activeOpacity={0.7}>
+                    <Text style={{ color: theme.primary }}>{otherUser.displayName || 'User'}</Text>
+                  </TouchableOpacity>
+                </>
+              ) : (
+                <>
+                  <TouchableOpacity onPress={() => handleUserTap(item.from)} activeOpacity={0.7}>
+                    <Text style={{ color: theme.primary }}>{otherUser.displayName || 'User'}</Text>
+                  </TouchableOpacity> has started following you
+                </>
+              )}
             </Text>
-            <Text style={[theme.typography.caption, { color: theme.textDim, marginTop: 4 }]}>
-              {item.timestamp?.toDate().toLocaleDateString()}
-            </Text>
-          </View>
-
-          {/* Action buttons */}
-          <View style={styles.actionButtons}>
-            <TouchableOpacity 
-              style={[styles.actionButton, styles.acceptButton, { backgroundColor: theme.primary }]}
-              onPress={() => handleAcceptFollow(item)}
-            >
-              <Text style={[styles.actionButtonText, { color: theme.background }]}>
-                Accept
-              </Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={[styles.actionButton, styles.denyButton, { backgroundColor: theme.error }]}
-              onPress={() => handleDenyFollow(item)}
-            >
-              <Text style={[styles.actionButtonText, { color: theme.background }]}>
-                Deny
-              </Text>
-            </TouchableOpacity>
+            <Text style={[theme.typography.caption, { color: theme.textDim, marginTop: 4 }]}>{timeAgo}</Text>
           </View>
         </View>
       );
     }
-
     // Default notification rendering
     return (
       <View style={[styles.notificationItem, { backgroundColor: theme.surface }]}>
@@ -165,9 +189,10 @@ export default function NotificationsScreen({ navigation }) {
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
-      {/* Custom header with back arrow and centered title */}
-      <View style={[styles.header, { backgroundColor: theme.surface, borderBottomColor: theme.border }]}>
+    // SafeAreaView for notch/status bar safety
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+      {/* Custom header with purple back arrow */}
+      <View style={[styles.header, { backgroundColor: theme.surface, paddingTop: Platform.OS === 'ios' ? 30 : 10, paddingHorizontal: 20 }]}> 
         <TouchableOpacity 
           style={styles.backButton} 
           onPress={() => navigation.goBack()}
@@ -175,38 +200,23 @@ export default function NotificationsScreen({ navigation }) {
         >
           <MaterialCommunityIcons 
             name="arrow-left" 
-            size={24} 
-            color={theme.primary} 
+            size={28} 
+            color="#5A4AE3" // App's purple
           />
         </TouchableOpacity>
-        
-        <Text style={[theme.typography.headline, { color: theme.text, flex: 1, textAlign: 'center' }]}>
-          Notifications
-        </Text>
-        
+        <Text style={[theme.typography.headline, { color: theme.text, flex: 1, textAlign: 'center' }]}>Notifications</Text>
         <View style={styles.placeholder} />
       </View>
-
       {/* Notifications list */}
       {loading ? (
         <View style={styles.loadingContainer}>
-          <Text style={[theme.typography.body, { color: theme.textDim }]}>
-            Loading notifications...
-          </Text>
+          <Text style={[theme.typography.body, { color: theme.textDim }]}>Loading notifications...</Text>
         </View>
       ) : notifications.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <MaterialCommunityIcons 
-            name="bell-off" 
-            size={48} 
-            color={theme.textDim} 
-          />
-          <Text style={[theme.typography.subheadline, { color: theme.textDim, marginTop: 16 }]}>
-            No notifications yet
-          </Text>
-          <Text style={[theme.typography.body, { color: theme.textDim, textAlign: 'center', marginTop: 8 }]}>
-            You'll see follow requests and other notifications here
-          </Text>
+          <MaterialCommunityIcons name="bell-off" size={48} color={theme.textDim} />
+          <Text style={[theme.typography.subheadline, { color: theme.textDim, marginTop: 16 }]}>No notifications yet</Text>
+          <Text style={[theme.typography.body, { color: theme.textDim, textAlign: 'center', marginTop: 8 }]}>You'll see follow notifications here</Text>
         </View>
       ) : (
         <FlatList
@@ -269,37 +279,10 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  avatarPlaceholder: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  notificationContent: {
-    flex: 1,
-    marginRight: 12,
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  actionButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 8,
-    minWidth: 60,
-    alignItems: 'center',
-  },
-  actionButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  acceptButton: {
-    // Styled with theme.primary
-  },
-  denyButton: {
-    // Styled with theme.error
+  avatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#eee',
   },
 }); 

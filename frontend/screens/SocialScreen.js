@@ -72,27 +72,25 @@ export default function SocialScreen({ navigation }) {
             <Text style={[theme.typography.subheadline, { color: theme.text }]}>
               {userProfile?.outfits || 0}
             </Text>
-            <Text style={[theme.typography.caption, { color: theme.textDim }]}>
-              Outfits
-            </Text>
+            <Text style={[theme.typography.caption, { color: theme.textDim }]}>Outfits</Text>
           </View>
-          
+          {/* Followers: number is tappable, but style does not change */}
           <View style={styles.statItem}>
-            <Text style={[theme.typography.subheadline, { color: theme.text }]}>
-              {userProfile?.followers?.length || 0}
-            </Text>
-            <Text style={[theme.typography.caption, { color: theme.textDim }]}>
-              Followers
-            </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Followers')} activeOpacity={0.7}>
+              <Text style={[theme.typography.subheadline, { color: theme.text }]}>
+                {userProfile?.followers?.length || 0}
+              </Text>
+            </TouchableOpacity>
+            <Text style={[theme.typography.caption, { color: theme.textDim }]}>Followers</Text>
           </View>
-          
+          {/* Following: number is tappable, but style does not change */}
           <View style={styles.statItem}>
-            <Text style={[theme.typography.subheadline, { color: theme.text }]}>
-              {userProfile?.following?.length || 0}
-            </Text>
-            <Text style={[theme.typography.caption, { color: theme.textDim }]}>
-              Following
-            </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Following')} activeOpacity={0.7}>
+              <Text style={[theme.typography.subheadline, { color: theme.text }]}>
+                {userProfile?.following?.length || 0}
+              </Text>
+            </TouchableOpacity>
+            <Text style={[theme.typography.caption, { color: theme.textDim }]}>Following</Text>
           </View>
         </View>
       </View>
