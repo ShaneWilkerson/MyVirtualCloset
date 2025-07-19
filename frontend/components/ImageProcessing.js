@@ -62,7 +62,7 @@ export default function ImageProcessing({ onConfirm }) {
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <View style={styles.buttonGroup}>
-        <ThemedButton title="Pick Image" onPress={pickImage} />
+        <ThemedButton title="Choose Outfit" onPress={() => {}} />
         {imageUri && !cleanedImageUri && (
           <ThemedButton title="Process Image" onPress={processImage} disabled={loading} />
         )}

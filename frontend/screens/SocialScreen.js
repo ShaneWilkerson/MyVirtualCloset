@@ -101,14 +101,27 @@ export default function SocialScreen({ navigation }) {
       {/* Search Button - placed below the profile header and border line for correct visual separation */}
       <TouchableOpacity
         style={[
-          styles.searchButton,
-          { backgroundColor: theme.background, borderColor: theme.primary }
+          styles.actionButton,
+          { backgroundColor: theme.primary }
         ]}
         onPress={() => navigation.navigate('Search')}
         activeOpacity={0.8}
       >
-        <MaterialCommunityIcons name="magnify" size={24} color={theme.primary} />
-        <Text style={[theme.typography.subheadline, { color: theme.primary, marginLeft: 8 }]}>Search</Text>
+        <MaterialCommunityIcons name="magnify" size={24} color="white" />
+        <Text style={[theme.typography.subheadline, { color: "white", marginLeft: 8 }]}>Search</Text>
+      </TouchableOpacity>
+
+      {/* Post Outfit Button */}
+      <TouchableOpacity
+        style={[
+          styles.actionButton,
+          { backgroundColor: theme.primary }
+        ]}
+        onPress={() => navigation.navigate('Upload')}
+        activeOpacity={0.8}
+      >
+        <MaterialCommunityIcons name="hanger" size={24} color="white" />
+        <Text style={[theme.typography.subheadline, { color: "white", marginLeft: 8 }]}>Post Outfit</Text>
       </TouchableOpacity>
 
       {/* Future content will go here */}
@@ -161,20 +174,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 24,
   },
-  searchButton: {
+  actionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
     borderRadius: 24,
-    paddingVertical: 10,
+    paddingVertical: 12,
     marginHorizontal: 24,
     marginTop: 0,
-    marginBottom: 16,
+    marginBottom: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
 });
