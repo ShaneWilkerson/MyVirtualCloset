@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, Image, Platform } from 'react-native';
+import { View, Text, StyleSheet, TextInput, FlatList, TouchableOpacity, Image, Platform, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import { db } from '../services/firebase';
@@ -63,7 +63,22 @@ export default function SearchScreen({ navigation }) {
         backgroundColor: theme.background
       }]}
       >
-        {/* Search bar at the top */}
+        {/* Custom header with back button - matches other screens */}
+        <View style={styles.headerContainer}>
+          <Pressable
+            onPress={() => navigation.navigate('Social')}
+            style={styles.backButton}
+          >
+            <Text style={[styles.backArrow, { color: theme.primary }]}>←</Text>
+          </Pressable>
+          <Text style={[theme.typography.headline, { color: theme.text, flex: 1, textAlign: 'center' }]}>
+            Search Users
+          </Text>
+          {/* Empty view for spacing to center the title */}
+          <View style={styles.backButton} />
+        </View>
+
+        {/* Search bar below the header */}
         <TextInput
           style={[styles.searchBar, { borderColor: theme.primary, color: theme.text }]}
           placeholder="Search users by name..."
@@ -91,6 +106,22 @@ export default function SearchScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 16,
+    marginBottom: 20,
+  },
+  backButton: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    minWidth: 44, // Ensures consistent touch target size
+  },
+  backArrow: {
+    fontSize: 24,
+    fontWeight: 'bold',
   },
   searchBar: {
     borderWidth: 1,

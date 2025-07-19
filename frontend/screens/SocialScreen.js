@@ -43,8 +43,12 @@ export default function SocialScreen({ navigation }) {
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Profile Header Section */}
       <View style={[styles.profileHeader, { backgroundColor: theme.surface }]}>
-        {/* Profile Picture - Circular Image */}
-        <View style={styles.profileImageContainer}>
+        {/* Profile Picture - Circular Image (Tappable) */}
+        <TouchableOpacity 
+          style={styles.profileImageContainer}
+          onPress={() => navigation.navigate('ProfilePicture')}
+          activeOpacity={0.7}
+        >
           {userProfile?.photoURL ? (
             <Image 
               source={{ uri: userProfile.photoURL }} 
@@ -59,7 +63,7 @@ export default function SocialScreen({ navigation }) {
               />
             </View>
           )}
-        </View>
+        </TouchableOpacity>
 
         {/* Username */}
         <Text style={[theme.typography.headline, { color: theme.text, marginTop: 12 }]}>

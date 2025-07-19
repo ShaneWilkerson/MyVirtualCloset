@@ -9,6 +9,7 @@ import { getAuth } from 'firebase/auth';
 // import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 import Constants from 'expo-constants';
 
 const {
@@ -40,5 +41,6 @@ const auth = getAuth(app);
 // });
 
 const db = getFirestore(app);
+const storage = getStorage(app);
 
-export { auth, db };
+export { auth, db, storage };

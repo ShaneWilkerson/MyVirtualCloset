@@ -1,8 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from './services/firebase';
 import LoginScreen from './screens/LoginScreen';
 import SignupScreen from './screens/SignupScreen';
 import TabNavigator from './navigation/TabNavigator';
@@ -15,11 +13,13 @@ import CalendarScreen from './screens/CalendarScreen';
 import SocialSettingsScreen from './screens/SocialSettingsScreen';
 import NotificationsScreen from './screens/NotificationsScreen';
 import { ThemeProvider } from './context/ThemeContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import SearchScreen from './screens/SearchScreen';
 import UserProfileScreen from './screens/UserProfileScreen';
 import FollowersScreen from './screens/FollowersScreen';
 import FollowingScreen from './screens/FollowingScreen';
+import ProfilePictureScreen from './screens/ProfilePictureScreen';
 LogBox.ignoreLogs([
   'AsyncStorage has been extracted from react-native core',
   'Unsupported top level event type "topInsetsChange"',
@@ -28,19 +28,12 @@ LogBox.ignoreLogs([
 
 const Stack = createNativeStackNavigator();
 
-export default function App() {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, setUser);
-    return unsub;
-  }, []);
+function AppContent() {
+  const { user } = useAuth();
 
   return (
-    <SafeAreaProvider>
-      <ThemeProvider>
-        <NavigationContainer>
-          {user ? (
+    <NavigationContainer>
+      {user ? (
             <Stack.Navigator screenOptions={{ headerShown: true }}>
               <Stack.Screen
                 name="Tabs"
@@ -66,6 +59,7 @@ export default function App() {
             <Stack.Screen name="UserProfile" component={UserProfileScreen} options={{ headerShown: false }} />
             <Stack.Screen name="Followers" component={FollowersScreen} options={{ headerShown: false }} />
             <Stack.Screen name="Following" component={FollowingScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="ProfilePicture" component={ProfilePictureScreen} options={{ headerShown: false }} />
             </Stack.Navigator>
           ) : (
             <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -74,6 +68,16 @@ export default function App() {
             </Stack.Navigator>
           )}
         </NavigationContainer>
+      );
+    }
+
+export default function App() {
+  return (
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );
