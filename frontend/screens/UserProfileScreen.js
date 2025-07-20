@@ -15,6 +15,9 @@ export default function UserProfileScreen({ route, navigation }) {
   const [followStatus, setFollowStatus] = useState('not_following');
   const [loading, setLoading] = useState(true);
 
+  // Get the 'from' param to determine where the user navigated from
+  const fromScreen = route.params?.from;
+
   // Listen to user profile data in real-time
   useEffect(() => {
     const userDocRef = doc(db, 'users', userId);
@@ -97,7 +100,11 @@ export default function UserProfileScreen({ route, navigation }) {
         {/* Back arrow in the top-left of the card */}
         <TouchableOpacity
           style={styles.backButton}
-          onPress={() => navigation.navigate('Search')} // Always go back to SearchScreen
+          onPress={() => {
+            // Context-aware back navigation
+            // If from Social or Search, goBack preserves scroll position and context
+            navigation.goBack();
+          }}
           activeOpacity={0.7}
         >
           <MaterialCommunityIcons

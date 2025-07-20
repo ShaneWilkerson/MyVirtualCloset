@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { auth, db } from '../services/firebase';
-import { doc, getDoc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, getDoc, collection, query, where, orderBy } from 'firebase/firestore';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 export default function SocialScreen({ navigation }) {
   const { theme } = useTheme();
   const [userProfile, setUserProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [feedPosts, setFeedPosts] = useState([]);
 
   // Load current user's profile data when component mounts
   useEffect(() => {
@@ -39,8 +40,69 @@ export default function SocialScreen({ navigation }) {
     return () => unsubscribe();
   }, []);
 
+  // Real-time feed of posts from followed users (not including self)
+  useEffect(() => {
+    if (!userProfile || !userProfile.following.length) {
+      setFeedPosts([]);
+      return;
+    }
+    // Query images where uid is in following array, but not the current user
+    const q = query(
+      collection(db, 'images'),
+      where('uid', 'in', userProfile.following.filter(uid => uid !== userProfile.uid).slice(0, 10)), // Firestore 'in' supports max 10
+      orderBy('createdAt', 'desc')
+    );
+    const unsub = onSnapshot(q, async (snapshot) => {
+      // Fetch user info for each post
+      const posts = await Promise.all(snapshot.docs.map(async docSnap => {
+        const post = { id: docSnap.id, ...docSnap.data() };
+        // Fetch user info for the post's owner
+        const userDoc = await onSnapshot(doc(db, 'users', post.uid), () => {});
+        let userInfo = {};
+        try {
+          const userDocSnap = await getDoc(doc(db, 'users', post.uid));
+          userInfo = userDocSnap.exists() ? userDocSnap.data() : {};
+        } catch {}
+        return {
+          ...post,
+          user: {
+            displayName: userInfo.displayName || 'User',
+            photoURL: userInfo.photoURL || null,
+            uid: post.uid,
+          },
+        };
+      }));
+      setFeedPosts(posts);
+    });
+    return () => unsub();
+  }, [userProfile]);
+
+  // Render a single post in the feed
+  const renderPost = ({ item }) => (
+    <View style={[styles.feedCard, { backgroundColor: theme.surface }]}> 
+      {/* User info row */}
+      <View style={styles.feedUserRow}>
+        {item.user.photoURL ? (
+          <Image source={{ uri: item.user.photoURL }} style={styles.feedAvatar} />
+        ) : (
+          <View style={[styles.feedAvatar, { backgroundColor: theme.primary, alignItems: 'center', justifyContent: 'center' }]}> 
+            <MaterialCommunityIcons name="account" size={24} color={theme.background} />
+          </View>
+        )}
+        <TouchableOpacity onPress={() => navigation.navigate('UserProfile', { userId: item.user.uid, from: 'Social' })} activeOpacity={0.7}>
+          <Text style={[theme.typography.body, { color: theme.primary, marginLeft: 8, fontWeight: 'bold' }]}>{item.user.displayName}</Text>
+        </TouchableOpacity>
+      </View>
+      {/* Outfit image placeholder */}
+      <View style={styles.feedImageContainer}>
+        <MaterialCommunityIcons name="tshirt-crew" size={64} color={theme.textDim} />
+        {/* <Image source={{ uri: item.url }} style={styles.feedImage} /> */}
+      </View>
+    </View>
+  );
+
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}> 
       {/* Profile Header Section */}
       <View style={[styles.profileHeader, { backgroundColor: theme.surface }]}>
         {/* Profile Picture - Circular Image (Tappable) */}
@@ -128,10 +190,16 @@ export default function SocialScreen({ navigation }) {
         <Text style={[theme.typography.subheadline, { color: "white", marginLeft: 8 }]}>Post Outfit</Text>
       </TouchableOpacity>
 
-      {/* Future content will go here */}
-      <View style={styles.contentPlaceholder}>
-        <Text style={[theme.typography.body, { color: theme.textDim, textAlign: 'center' }]}>Social feed content will appear here</Text>
-      </View>
+      {/* Feed of posts from followed users */}
+      <FlatList
+        data={feedPosts}
+        keyExtractor={item => item.id}
+        renderItem={renderPost}
+        contentContainerStyle={styles.feedList}
+        ListEmptyComponent={<Text style={[theme.typography.caption, { color: theme.textDim, textAlign: 'center', marginTop: 32 }]}>No posts from users you follow yet.</Text>}
+        showsVerticalScrollIndicator={false}
+        style={{ flex: 1 }}
+      />
     </View>
   );
 }
@@ -192,5 +260,44 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
+  },
+  feedList: {
+    padding: 20,
+    paddingTop: 0,
+    paddingBottom: 40,
+  },
+  feedCard: {
+    borderRadius: 16,
+    marginBottom: 20,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  feedUserRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  feedAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#eee',
+  },
+  feedImageContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 120,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 12,
+    marginTop: 8,
+  },
+  feedImage: {
+    width: '100%',
+    height: 120,
+    borderRadius: 12,
   },
 });

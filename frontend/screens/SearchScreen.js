@@ -40,7 +40,7 @@ export default function SearchScreen({ navigation }) {
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={styles.userRow}
-      onPress={() => navigation.navigate('UserProfile', { userId: item.id })}
+      onPress={() => navigation.navigate('UserProfile', { userId: item.id, from: 'Search' })} // Pass 'from' param
       activeOpacity={0.7}
     >
       {item.photoURL ? (
