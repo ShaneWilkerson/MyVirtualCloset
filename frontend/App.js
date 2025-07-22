@@ -20,6 +20,7 @@ import UserProfileScreen from './screens/UserProfileScreen';
 import FollowersScreen from './screens/FollowersScreen';
 import FollowingScreen from './screens/FollowingScreen';
 import ProfilePictureScreen from './screens/ProfilePictureScreen';
+import AvatarCustomizationScreen from './screens/AvatarCustomizationScreen';
 LogBox.ignoreLogs([
   'AsyncStorage has been extracted from react-native core',
   'Unsupported top level event type "topInsetsChange"',
@@ -60,6 +61,7 @@ function AppContent() {
             <Stack.Screen name="Followers" component={FollowersScreen} options={{ headerShown: false }} />
             <Stack.Screen name="Following" component={FollowingScreen} options={{ headerShown: false }} />
             <Stack.Screen name="ProfilePicture" component={ProfilePictureScreen} options={{ headerShown: false }} />
+            <Stack.Screen name="AvatarCustomization" component={AvatarCustomizationScreen} options={{ headerShown: false }} />
             </Stack.Navigator>
           ) : (
             <Stack.Navigator screenOptions={{ headerShown: false }}>
