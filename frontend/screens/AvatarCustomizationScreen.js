@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Platform, Pressable, Animated, PanResponder } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Platform, Pressable, Animated, PanResponder, ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import { auth, db } from '../services/firebase';
 import { doc, updateDoc, getDoc } from 'firebase/firestore';
@@ -175,116 +176,117 @@ export default function AvatarCustomizationScreen({ navigation }) {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.background }]}
-      {...panResponder.panHandlers}
-    >
-      {/* Custom header with back button */}
-      <View style={styles.headerContainer}>
-        <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Text style={[styles.backArrow, { color: theme.primary }]}>←</Text>
-        </Pressable>
-        <Text style={[theme.typography.headline, { color: theme.text, flex: 1, textAlign: 'center' }]}>Customize Avatar</Text>
-        <View style={styles.backButton} />
-      </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+      {/* Student-style comment: Use ScrollView to make the page scrollable and add top padding for safe area */}
+      <ScrollView contentContainerStyle={{ paddingTop: Platform.OS === 'ios' ? 50 : 20, paddingHorizontal: 20, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
+        {/* Custom header with back button */}
+        <View style={styles.headerContainer}>
+          <Pressable onPress={() => navigation.goBack()} style={styles.backButton}>
+            <Text style={[styles.backArrow, { color: theme.primary }]}>←</Text>
+          </Pressable>
+          <Text style={[theme.typography.headline, { color: theme.text, flex: 1, textAlign: 'center' }]}>Customize Avatar</Text>
+          <View style={styles.backButton} />
+        </View>
 
-      {/* Avatar preview with swipe-to-spin */}
-      <View style={styles.avatarPreview}>
-        {renderAvatar()}
-        <Text style={[theme.typography.caption, { color: theme.textDim, marginTop: 8 }]}>Swipe left/right to spin</Text>
-      </View>
+        {/* Avatar preview with swipe-to-spin */}
+        <View style={styles.avatarPreview} {...panResponder.panHandlers}>
+          {renderAvatar()}
+          <Text style={[theme.typography.caption, { color: theme.textDim, marginTop: 8 }]}>Swipe left/right to spin</Text>
+        </View>
 
-      {/* Trait pickers */}
-      <TraitPicker
-        label="Gender"
-        value={traits.gender}
-        options={[
-          { label: 'Boy', value: 'boy' },
-          { label: 'Girl', value: 'girl' },
-        ]}
-        onChange={v => setTraits(t => ({ ...t, gender: v }))}
-      />
-      <TraitPicker
-        label="Head Shape"
-        value={traits.headShape}
-        options={[
-          { label: 'Oval', value: 'oval' },
-          { label: 'Round', value: 'round' },
-        ]}
-        onChange={v => setTraits(t => ({ ...t, headShape: v }))}
-      />
-      <TraitPicker
-        label="Hair Style"
-        value={traits.hairStyle}
-        options={[
-          { label: 'Short', value: 'short' },
-          { label: 'Long', value: 'long' },
-        ]}
-        onChange={v => setTraits(t => ({ ...t, hairStyle: v }))}
-      />
-      <TraitPicker
-        label="Hair Color"
-        value={traits.hairColor}
-        options={[
-          { label: 'Black', value: '#222' },
-          { label: 'Brown', value: '#a0522d' },
-          { label: 'Blonde', value: '#ffe066' },
-          { label: 'Red', value: '#d7263d' },
-        ]}
-        onChange={v => setTraits(t => ({ ...t, hairColor: v }))}
-      />
-      <TraitPicker
-        label="Eyebrows"
-        value={traits.eyebrows}
-        options={[
-          { label: 'Normal', value: 'normal' },
-          { label: 'Thick', value: 'thick' },
-        ]}
-        onChange={v => setTraits(t => ({ ...t, eyebrows: v }))}
-      />
-      <TraitPicker
-        label="Eye Color"
-        value={traits.eyeColor}
-        options={[
-          { label: 'Blue', value: '#3a5ba0' },
-          { label: 'Brown', value: '#7c4700' },
-          { label: 'Green', value: '#3aaf5a' },
-        ]}
-        onChange={v => setTraits(t => ({ ...t, eyeColor: v }))}
-      />
-      <TraitPicker
-        label="Lip Shape"
-        value={traits.lipShape}
-        options={[
-          { label: 'Normal', value: 'normal' },
-          { label: 'Full', value: 'full' },
-        ]}
-        onChange={v => setTraits(t => ({ ...t, lipShape: v }))}
-      />
-      <TraitPicker
-        label="Facial Hair"
-        value={traits.facialHair}
-        options={[
-          { label: 'None', value: 'none' },
-          { label: 'Beard', value: 'beard' },
-        ]}
-        onChange={v => setTraits(t => ({ ...t, facialHair: v }))}
-      />
-      <TraitPicker
-        label="Skin Tone"
-        value={traits.skinTone}
-        options={[
-          { label: 'Light', value: '#f5d6c6' },
-          { label: 'Tan', value: '#e0ac69' },
-          { label: 'Brown', value: '#8d5524' },
-        ]}
-        onChange={v => setTraits(t => ({ ...t, skinTone: v }))}
-      />
+        {/* Trait pickers */}
+        <TraitPicker
+          label="Gender"
+          value={traits.gender}
+          options={[
+            { label: 'Boy', value: 'boy' },
+            { label: 'Girl', value: 'girl' },
+          ]}
+          onChange={v => setTraits(t => ({ ...t, gender: v }))}
+        />
+        <TraitPicker
+          label="Head Shape"
+          value={traits.headShape}
+          options={[
+            { label: 'Oval', value: 'oval' },
+            { label: 'Round', value: 'round' },
+          ]}
+          onChange={v => setTraits(t => ({ ...t, headShape: v }))}
+        />
+        <TraitPicker
+          label="Hair Style"
+          value={traits.hairStyle}
+          options={[
+            { label: 'Short', value: 'short' },
+            { label: 'Long', value: 'long' },
+          ]}
+          onChange={v => setTraits(t => ({ ...t, hairStyle: v }))}
+        />
+        <TraitPicker
+          label="Hair Color"
+          value={traits.hairColor}
+          options={[
+            { label: 'Black', value: '#222' },
+            { label: 'Brown', value: '#a0522d' },
+            { label: 'Blonde', value: '#ffe066' },
+            { label: 'Red', value: '#d7263d' },
+          ]}
+          onChange={v => setTraits(t => ({ ...t, hairColor: v }))}
+        />
+        <TraitPicker
+          label="Eyebrows"
+          value={traits.eyebrows}
+          options={[
+            { label: 'Normal', value: 'normal' },
+            { label: 'Thick', value: 'thick' },
+          ]}
+          onChange={v => setTraits(t => ({ ...t, eyebrows: v }))}
+        />
+        <TraitPicker
+          label="Eye Color"
+          value={traits.eyeColor}
+          options={[
+            { label: 'Blue', value: '#3a5ba0' },
+            { label: 'Brown', value: '#7c4700' },
+            { label: 'Green', value: '#3aaf5a' },
+          ]}
+          onChange={v => setTraits(t => ({ ...t, eyeColor: v }))}
+        />
+        <TraitPicker
+          label="Lip Shape"
+          value={traits.lipShape}
+          options={[
+            { label: 'Normal', value: 'normal' },
+            { label: 'Full', value: 'full' },
+          ]}
+          onChange={v => setTraits(t => ({ ...t, lipShape: v }))}
+        />
+        <TraitPicker
+          label="Facial Hair"
+          value={traits.facialHair}
+          options={[
+            { label: 'None', value: 'none' },
+            { label: 'Beard', value: 'beard' },
+          ]}
+          onChange={v => setTraits(t => ({ ...t, facialHair: v }))}
+        />
+        <TraitPicker
+          label="Skin Tone"
+          value={traits.skinTone}
+          options={[
+            { label: 'Light', value: '#f5d6c6' },
+            { label: 'Tan', value: '#e0ac69' },
+            { label: 'Brown', value: '#8d5524' },
+          ]}
+          onChange={v => setTraits(t => ({ ...t, skinTone: v }))}
+        />
 
-      {/* Save button */}
-      <TouchableOpacity style={[styles.saveButton, { backgroundColor: theme.primary }]} onPress={handleSave}>
-        <Text style={[theme.typography.body, { color: theme.surface }]}>Save Avatar</Text>
-      </TouchableOpacity>
-    </View>
+        {/* Save button */}
+        <TouchableOpacity style={[styles.saveButton, { backgroundColor: theme.primary }]} onPress={handleSave}>
+          <Text style={[theme.typography.body, { color: theme.surface }]}>Save Avatar</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
