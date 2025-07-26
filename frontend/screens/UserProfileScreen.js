@@ -101,9 +101,18 @@ export default function UserProfileScreen({ route, navigation }) {
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => {
-            // Context-aware back navigation
-            // If from Social or Search, goBack preserves scroll position and context
-            navigation.goBack();
+            // Student-style comment: Context-aware back navigation based on where user came from
+            // This ensures we return to the correct screen and preserve scroll position
+            if (fromScreen === 'Social') {
+              // Return to Social tab to preserve feed scroll position
+              navigation.navigate('Social');
+            } else if (fromScreen === 'Search') {
+              // Return to Search screen
+              navigation.navigate('Search');
+            } else {
+              // Fallback to goBack() for other navigation sources
+              navigation.goBack();
+            }
           }}
           activeOpacity={0.7}
         >
