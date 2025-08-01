@@ -37,7 +37,7 @@ export default function FollowersScreen({ navigation }) {
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={styles.userRow}
-      onPress={() => navigation.navigate('UserProfile', { userId: item.id })}
+      onPress={() => navigation.navigate('UserProfile', { userId: item.id, from: 'Followers' })}
       activeOpacity={0.7}
     >
       {item.photoURL ? (

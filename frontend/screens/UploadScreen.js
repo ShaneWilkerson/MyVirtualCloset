@@ -28,7 +28,7 @@ export default function UploadScreen({ navigation }) {
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        <Text style={[theme.typography.headline, { color: theme.text, marginBottom: 16 }]}>
+        <Text style={[theme.typography.headline, { color: theme.text, marginBottom: 16, textAlign: 'center' }]}>
           Upload Clothing
         </Text>
         <ImageProcessing onConfirm={handleConfirmUpload} />

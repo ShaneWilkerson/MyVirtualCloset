@@ -109,6 +109,12 @@ export default function UserProfileScreen({ route, navigation }) {
             } else if (fromScreen === 'Search') {
               // Return to Search screen
               navigation.navigate('Search');
+            } else if (fromScreen === 'Followers') {
+              // Return to Followers screen
+              navigation.navigate('Followers');
+            } else if (fromScreen === 'Following') {
+              // Return to Following screen
+              navigation.navigate('Following');
             } else {
               // Fallback to goBack() for other navigation sources
               navigation.goBack();

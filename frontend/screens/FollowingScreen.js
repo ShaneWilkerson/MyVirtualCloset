@@ -37,7 +37,7 @@ export default function FollowingScreen({ navigation }) {
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={styles.userRow}
-      onPress={() => navigation.navigate('UserProfile', { userId: item.id })}
+      onPress={() => navigation.navigate('UserProfile', { userId: item.id, from: 'Following' })}
       activeOpacity={0.7}
     >
       {item.photoURL ? (
