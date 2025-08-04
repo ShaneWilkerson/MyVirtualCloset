@@ -23,6 +23,7 @@ export default function SignupScreen({ navigation }) {
         displayName,
         joined: serverTimestamp(),
         isPublic: true, // Default to public profile for new users
+        bio: '', // User's bio - empty by default
         followers: [], // Array of user IDs who follow this user
         following: [], // Array of user IDs this user is following
         pendingFollowers: [], // Array of user IDs who requested to follow (for private profiles)

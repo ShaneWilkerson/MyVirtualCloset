@@ -25,6 +25,7 @@ export default function SocialScreen({ navigation }) {
           uid: doc.id,
           displayName: userData.displayName || 'User',
           photoURL: userData.photoURL || null,
+          bio: userData.bio || '', // Include bio field for real-time updates
           followers: userData.followers || [],
           following: userData.following || [],
           outfits: userData.outfits || 0, // Placeholder for outfit count
@@ -131,6 +132,13 @@ export default function SocialScreen({ navigation }) {
         <Text style={[theme.typography.headline, { color: theme.text, marginTop: 12 }]}>
           {userProfile?.displayName || 'Loading...'}
         </Text>
+        
+        {/* Bio - displayed below username in smaller font */}
+        {userProfile?.bio && (
+          <Text style={[theme.typography.body, { color: theme.textDim, marginTop: 4, textAlign: 'center' }]}>
+            {userProfile.bio}
+          </Text>
+        )}
 
         {/* Stats Row: Outfits, Followers, Following */}
         <View style={styles.statsContainer}>

@@ -140,6 +140,13 @@ export default function UserProfileScreen({ route, navigation }) {
             )}
           </View>
           <Text style={[theme.typography.headline, { color: theme.text, marginTop: 12 }]}>{user.displayName}</Text>
+          
+          {/* Bio - displayed below username in smaller font */}
+          {user.bio && (
+            <Text style={[theme.typography.body, { color: theme.textDim, marginTop: 4, textAlign: 'center' }]}>
+              {user.bio}
+            </Text>
+          )}
           <View style={styles.statsContainer}>
             <View style={styles.statItem}><Text style={[theme.typography.subheadline, { color: theme.text }]}>{user.outfits || 0}</Text><Text style={[theme.typography.caption, { color: theme.textDim }]}>Outfits</Text></View>
             <View style={styles.statItem}><Text style={[theme.typography.subheadline, { color: theme.text }]}>{user.followers?.length || 0}</Text><Text style={[theme.typography.caption, { color: theme.textDim }]}>Followers</Text></View>

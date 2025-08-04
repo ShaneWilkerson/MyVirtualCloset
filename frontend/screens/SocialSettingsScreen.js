@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Switch, Alert, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Switch, Alert, Platform, TextInput } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import { auth, db } from '../services/firebase';
@@ -9,6 +9,9 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 export default function SocialSettingsScreen({ navigation }) {
   const { theme } = useTheme();
   const [isPublic, setIsPublic] = useState(true); // Default to public
+  const [bio, setBio] = useState(''); // User's bio
+  const [isEditingBio, setIsEditingBio] = useState(false); // Bio editing mode
+  const [tempBio, setTempBio] = useState(''); // Temporary bio for editing
   const [isLoading, setIsLoading] = useState(true);
 
   // This screen uses a custom header instead of the default navigation header
@@ -37,10 +40,12 @@ export default function SocialSettingsScreen({ navigation }) {
         // If isPublic field exists, use it; otherwise default to true
         const userData = userDoc.data();
         setIsPublic(userData.isPublic !== undefined ? userData.isPublic : true);
+        setBio(userData.bio || ''); // Load bio if it exists
       } else {
         // If user document doesn't exist, create it with default public setting
-        await updateDoc(userDocRef, { isPublic: true });
+        await updateDoc(userDocRef, { isPublic: true, bio: '' });
         setIsPublic(true);
+        setBio('');
       }
     } catch (error) {
       console.error('Error loading privacy setting:', error);
@@ -75,6 +80,42 @@ export default function SocialSettingsScreen({ navigation }) {
       // Revert the toggle if update failed
       setIsPublic(!value);
     }
+  };
+
+  // Function to start editing bio
+  const startEditBio = () => {
+    setTempBio(bio);
+    setIsEditingBio(true);
+  };
+
+  // Function to save bio changes
+  const saveBio = async () => {
+    try {
+      const currentUser = auth.currentUser;
+      if (!currentUser) {
+        Alert.alert('Error', 'User not authenticated');
+        return;
+      }
+
+      // Update the user's bio in Firestore
+      const userDocRef = doc(db, 'users', currentUser.uid);
+      await updateDoc(userDocRef, { bio: tempBio });
+
+      // Update local state
+      setBio(tempBio);
+      setIsEditingBio(false);
+
+      Alert.alert('Success', 'Bio updated successfully');
+    } catch (error) {
+      console.error('Error updating bio:', error);
+      Alert.alert('Error', 'Failed to update bio');
+    }
+  };
+
+  // Function to cancel bio editing
+  const cancelEditBio = () => {
+    setTempBio(bio);
+    setIsEditingBio(false);
   };
 
   return (
@@ -145,6 +186,79 @@ export default function SocialSettingsScreen({ navigation }) {
               disabled={isLoading}
             />
           </View>
+        </View>
+
+        {/* Bio editing section */}
+        <View style={[styles.settingCard, { backgroundColor: theme.surface }]}>
+          <View style={styles.settingHeader}>
+            <MaterialCommunityIcons 
+              name="text" 
+              size={24} 
+              color={theme.primary} 
+            />
+            <Text style={[theme.typography.subheadline, { color: theme.text, marginLeft: 12 }]}>
+              Bio
+            </Text>
+          </View>
+          
+          <Text style={[theme.typography.body, { color: theme.textDim, marginTop: 8 }]}>
+            Add a short bio to your profile that others can see
+          </Text>
+
+          {isEditingBio ? (
+            /* Bio editing mode */
+            <View style={styles.bioEditContainer}>
+              <TextInput
+                style={[styles.bioInput, { 
+                  color: theme.text, 
+                  borderColor: theme.border,
+                  backgroundColor: theme.background 
+                }]}
+                value={tempBio}
+                onChangeText={setTempBio}
+                placeholder="Write something about yourself..."
+                placeholderTextColor={theme.textDim}
+                multiline
+                maxLength={150}
+                autoFocus
+              />
+              <Text style={[theme.typography.caption, { color: theme.textDim, textAlign: 'right', marginTop: 4 }]}>
+                {tempBio.length}/150
+              </Text>
+              <View style={styles.bioEditButtons}>
+                <TouchableOpacity 
+                  style={[styles.bioButton, { backgroundColor: theme.border }]} 
+                  onPress={cancelEditBio}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[theme.typography.body, { color: theme.text }]}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity 
+                  style={[styles.bioButton, { backgroundColor: theme.primary }]} 
+                  onPress={saveBio}
+                  activeOpacity={0.7}
+                >
+                  <Text style={[theme.typography.body, { color: theme.background }]}>Save</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : (
+            /* Bio display mode */
+            <View style={styles.bioDisplayContainer}>
+              <Text style={[theme.typography.body, { color: theme.text, marginTop: 12 }]}>
+                {bio || 'No bio added yet'}
+              </Text>
+              <TouchableOpacity 
+                style={[styles.editBioButton, { borderColor: theme.primary }]} 
+                onPress={startEditBio}
+                activeOpacity={0.7}
+              >
+                <Text style={[theme.typography.body, { color: theme.primary }]}>
+                  {bio ? 'Edit Bio' : 'Add Bio'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
 
         {/* Additional settings can be added here */}
@@ -225,5 +339,40 @@ const styles = StyleSheet.create({
   toggleLabels: {
     flex: 1,
     marginRight: 16,
+  },
+  bioEditContainer: {
+    marginTop: 16,
+  },
+  bioInput: {
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  bioEditButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 12,
+  },
+  bioButton: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginHorizontal: 4,
+  },
+  bioDisplayContainer: {
+    marginTop: 12,
+  },
+  editBioButton: {
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    marginTop: 12,
   },
 }); 

@@ -28,16 +28,18 @@ export const updateExistingUsers = async () => {
       // Check if the user needs to be updated with new fields
       const needsUpdate = {
         isPublic: userData.isPublic === undefined,
+        bio: userData.bio === undefined,
         followers: userData.followers === undefined,
         following: userData.following === undefined,
         pendingFollowers: userData.pendingFollowers === undefined,
         outfits: userData.outfits === undefined
       };
 
-      if (needsUpdate.isPublic || needsUpdate.followers || needsUpdate.following || needsUpdate.pendingFollowers || needsUpdate.outfits) {
+      if (needsUpdate.isPublic || needsUpdate.bio || needsUpdate.followers || needsUpdate.following || needsUpdate.pendingFollowers || needsUpdate.outfits) {
         // Update the user document with missing fields
         const updateData = {};
         if (needsUpdate.isPublic) updateData.isPublic = true;
+        if (needsUpdate.bio) updateData.bio = ''; // Add bio field if missing
         if (needsUpdate.followers) updateData.followers = [];
         if (needsUpdate.following) updateData.following = [];
         if (needsUpdate.pendingFollowers) updateData.pendingFollowers = [];
