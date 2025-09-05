@@ -1,3 +1,4 @@
+// screens/LoginScreen.js
 import React, { useState } from 'react';
 import { View, TextInput, Button, Text, StyleSheet } from 'react-native';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -13,52 +14,48 @@ export default function LoginScreen({ navigation }) {
   const handleLogin = async () => {
     setError('');
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (err) {
-      setError('Login failed. Check email or password.');
+      await signInWithEmailAndPassword(auth, email.trim(), password);
+      console.log('[Login] success');
+    } catch (e) {
+      const code = e?.code ?? 'unknown';
+      const msg = e?.message ?? String(e);
+      console.warn('[Login] failed', { code, msg });
+      // Common helpful remaps
+      const friendly =
+        code === 'auth/invalid-api-key' ? 'Invalid Firebase API key (check app config).' :
+        code === 'auth/network-request-failed' ? 'Network error. Check your connection or VPN.' :
+        code === 'auth/invalid-credential' ? 'Email or password is incorrect.' :
+        code === 'auth/too-many-requests' ? 'Too many attempts. Try again later.' :
+        msg;
+      setError(friendly);
     }
   };
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <Text style={[theme.typography.headline, { color: theme.text, textAlign: 'center', marginBottom: 20 }]}>
-        Login
-      </Text>
+      {!!error && <Text style={[styles.error, { color: theme.error }]}>{error}</Text>}
       <TextInput
-        style={[styles.input, { borderColor: theme.border, color: theme.text }]}
         placeholder="Email"
-        placeholderTextColor={theme.textDim}
+        autoCapitalize="none"
+        keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
-        autoCapitalize="none"
+        style={[styles.input, { borderColor: theme.outline, color: theme.text }]}
       />
       <TextInput
-        style={[styles.input, { borderColor: theme.border, color: theme.text }]}
         placeholder="Password"
-        placeholderTextColor={theme.textDim}
         secureTextEntry
         value={password}
         onChangeText={setPassword}
+        style={[styles.input, { borderColor: theme.outline, color: theme.text }]}
       />
-      {error ? <Text style={[styles.error, { color: theme.error }]}>{error}</Text> : null}
-      <Button title="Login" onPress={handleLogin} color={theme.primary} />
-      <View style={{ marginTop: 10 }}>
-        <Button title="Sign Up" onPress={() => navigation.navigate('Signup')} color={theme.secondaryAccent} />
-      </View>
+      <Button title="Log In" onPress={handleLogin} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, justifyContent: 'center' },
-  input: {
-    borderWidth: 1,
-    padding: 10,
-    marginBottom: 10,
-    borderRadius: 5,
-  },
-  error: {
-    textAlign: 'center',
-    marginBottom: 10,
-  },
+  input: { borderWidth: 1, padding: 10, marginBottom: 10, borderRadius: 5 },
+  error: { textAlign: 'center', marginBottom: 10 },
 });
