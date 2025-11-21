@@ -142,10 +142,13 @@ export default function SocialScreen({ navigation }) {
 
         {/* Stats Row: Outfits, Followers, Following */}
         <View style={styles.statsContainer}>
+          {/* Outfits: number is tappable, navigates to PostedOutfitsScreen */}
           <View style={styles.statItem}>
-            <Text style={[theme.typography.subheadline, { color: theme.text }]}>
-              {userProfile?.outfits || 0}
-            </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('PostedOutfits')} activeOpacity={0.7}>
+              <Text style={[theme.typography.subheadline, { color: theme.text }]}>
+                {userProfile?.outfits || 0}
+              </Text>
+            </TouchableOpacity>
             <Text style={[theme.typography.caption, { color: theme.textDim }]}>Outfits</Text>
           </View>
           {/* Followers: number is tappable, but style does not change */}
@@ -186,12 +189,13 @@ export default function SocialScreen({ navigation }) {
       </TouchableOpacity>
 
       {/* Post Outfit Button */}
+      {/* Navigate to Upload screen with mode='postOutfit' to show outfit selection instead of image picker */}
       <TouchableOpacity
         style={[
           styles.actionButton,
           { backgroundColor: theme.primary }
         ]}
-        onPress={() => navigation.navigate('Upload')}
+        onPress={() => navigation.navigate('Upload', { mode: 'postOutfit' })}
         activeOpacity={0.8}
       >
         <MaterialCommunityIcons name="hanger" size={24} color="white" />

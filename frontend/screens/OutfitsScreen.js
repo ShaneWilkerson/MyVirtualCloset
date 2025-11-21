@@ -1,61 +1,67 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import React from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { auth, db } from '../services/firebase';
-import { doc, onSnapshot } from 'firebase/firestore';
 
+/**
+ * OutfitsScreen Component
+ * 
+ * Main landing page for the Outfits tab.
+ * Provides two main actions:
+ * - Create Outfit: Navigate to the outfit builder screen
+ * - View Outfits: Navigate to the screen showing all saved outfits
+ * 
+ * This is the entry point when users tap the "Outfits" tab in the bottom navigation.
+ */
 export default function OutfitsScreen({ navigation }) {
   const { theme } = useTheme();
-  const [avatar, setAvatar] = useState(null);
-
-  // Listen for avatar data in the user's Firestore doc
-  useEffect(() => {
-    const currentUser = auth.currentUser;
-    if (!currentUser) return;
-    const userDocRef = doc(db, 'users', currentUser.uid);
-    const unsub = onSnapshot(userDocRef, (docSnap) => {
-      if (docSnap.exists()) {
-        setAvatar(docSnap.data().avatar || null);
-      }
-    });
-    return () => unsub();
-  }, []);
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.background }]} contentContainerStyle={styles.content}>
-      <Text style={[theme.typography.headline, styles.title]}>Create Outfit</Text>
-
-      <View style={styles.section}>
-        <Text style={[theme.typography.subheadline, { color: theme.text }]}>Select Clothing</Text>
-        <View style={styles.gridPlaceholder}>
-          <MaterialCommunityIcons name="tshirt-crew" size={48} color={theme.textDim} />
-        </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.background }}>
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        {/* Header with "Outfits" title - matches the style of other screens */}
+        {/* Add proper top padding to account for status bar and notch */}
+        <View style={[styles.header, { paddingTop: Platform.OS === 'ios' ? 10 : 20 }]}>
+        <Text style={[theme.typography.headline, { color: theme.text }]}>
+          Outfits
+        </Text>
       </View>
 
-      <View style={styles.section}>
-        {/* Avatar Preview Section */}
-        {/* If user has no avatar, show Create Avatar button. If they do, show Customize Avatar button. */}
-        <Text style={[theme.typography.subheadline, { color: theme.text }]}>Preview on Avatar</Text>
-        <View style={styles.avatarPlaceholder}>
-          {/* Placeholder avatar icon for now */}
-          <MaterialCommunityIcons name="account" size={100} color={theme.textDim} />
-          <TouchableOpacity
-            style={[styles.avatarButton, { backgroundColor: theme.primary }]}
-            onPress={() => navigation.navigate('AvatarCustomization')}
-            activeOpacity={0.8}
-          >
-            <Text style={[theme.typography.body, { color: theme.surface }]}> 
-              {avatar ? 'Customize Avatar' : 'Create Avatar'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+      {/* Main content area with two action buttons */}
+      <View style={styles.content}>
+        {/* Create Outfit Button - navigates to the outfit builder */}
+        <TouchableOpacity
+          style={[styles.actionButton, { backgroundColor: theme.primary }]}
+          onPress={() => navigation.navigate('CreateOutfit')}
+          activeOpacity={0.8}
+        >
+          <MaterialCommunityIcons name="plus-circle" size={32} color={theme.surface} />
+          <Text style={[theme.typography.subheadline, { color: theme.surface, marginTop: 12 }]}>
+            Create Outfit
+          </Text>
+          <Text style={[theme.typography.caption, { color: theme.surface, marginTop: 4, opacity: 0.9 }]}>
+            Build a new outfit from your closet
+          </Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity style={[styles.saveButton, { backgroundColor: theme.primary }]} onPress={() => {}}>
-        <Text style={[theme.typography.body, { color: theme.surface }]}>Save Outfit</Text>
-      </TouchableOpacity>
-    </ScrollView>
+        {/* View Outfits Button - navigates to the saved outfits list */}
+        <TouchableOpacity
+          style={[styles.actionButton, { backgroundColor: theme.surface, borderWidth: 2, borderColor: theme.primary }]}
+          onPress={() => navigation.navigate('ViewOutfits')}
+          activeOpacity={0.8}
+        >
+          <MaterialCommunityIcons name="tshirt-crew" size={32} color={theme.primary} />
+          <Text style={[theme.typography.subheadline, { color: theme.text, marginTop: 12 }]}>
+            View Outfits
+          </Text>
+          <Text style={[theme.typography.caption, { color: theme.textDim, marginTop: 4 }]}>
+            See all your saved outfits
+          </Text>
+        </TouchableOpacity>
+      </View>
+      </View>
+    </SafeAreaView>
   );
 }
 
@@ -63,46 +69,27 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 24,
+  },
   content: {
-    padding: 20,
-  },
-  title: {
-    marginBottom: 20,
-    color: 'black',
-  },
-  section: {
-    marginBottom: 30,
-  },
-  gridPlaceholder: {
-    height: 150,
-    backgroundColor: '#eee',
+    flex: 1,
+    paddingHorizontal: 20,
     justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 12,
-    marginTop: 10,
+    gap: 20,
   },
-  avatarPlaceholder: {
-    height: 250,
-    backgroundColor: '#eee',
+  actionButton: {
+    borderRadius: 16,
+    padding: 24,
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 12,
-    marginTop: 10,
-    position: 'relative',
-  },
-  avatarButton: {
-    position: 'absolute',
-    bottom: 24,
-    alignSelf: 'center',
-    paddingVertical: 10,
-    paddingHorizontal: 24,
-    borderRadius: 20,
-    elevation: 2,
-  },
-  saveButton: {
-    paddingVertical: 14,
-    alignItems: 'center',
-    borderRadius: 10,
-    marginTop: 20,
+    minHeight: 140,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
   },
 });

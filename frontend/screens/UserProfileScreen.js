@@ -3,9 +3,10 @@ import { View, Text, StyleSheet, Image, TouchableOpacity, FlatList, Platform } f
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import { auth, db } from '../services/firebase';
-import { doc, onSnapshot, collection } from 'firebase/firestore';
+import { doc, onSnapshot, collection, query, where, orderBy } from 'firebase/firestore';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { followUser, unfollowUser, isFollowing } from '../utils/followSystem';
+import OutfitPreview from '../components/OutfitPreview';
 
 export default function UserProfileScreen({ route, navigation }) {
   const { userId } = route.params;
@@ -14,6 +15,8 @@ export default function UserProfileScreen({ route, navigation }) {
   const [currentUser, setCurrentUser] = useState(auth.currentUser);
   const [followStatus, setFollowStatus] = useState('not_following');
   const [loading, setLoading] = useState(true);
+  const [postedOutfits, setPostedOutfits] = useState([]); // User's posted outfits
+  const [loadingOutfits, setLoadingOutfits] = useState(true);
 
   // Get the 'from' param to determine where the user navigated from
   const fromScreen = route.params?.from;
@@ -43,6 +46,33 @@ export default function UserProfileScreen({ route, navigation }) {
     return () => unsub && unsub();
   }, [userId, currentUser]);
 
+  // Fetch posted outfits for this user
+  // Shows all outfits that the user has posted publicly
+  useEffect(() => {
+    if (!userId) return;
+
+    // Query posted outfits for this user, ordered by creation date (newest first)
+    const postedQuery = query(
+      collection(db, 'postedOutfits'),
+      where('uid', '==', userId),
+      orderBy('createdAt', 'desc')
+    );
+
+    const unsubscribe = onSnapshot(postedQuery, (snapshot) => {
+      const outfitsList = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setPostedOutfits(outfitsList);
+      setLoadingOutfits(false);
+    }, (error) => {
+      console.error('Error fetching posted outfits:', error);
+      setLoadingOutfits(false);
+    });
+
+    return () => unsubscribe();
+  }, [userId]);
+
   // Handle follow/unfollow
   const handleFollow = async () => {
     if (followStatus === 'following') {
@@ -70,12 +100,66 @@ export default function UserProfileScreen({ route, navigation }) {
     );
   };
 
-  // Render outfits (placeholder)
-  const renderOutfits = () => (
-    <View style={styles.outfitsContainer}>
-      <Text style={[theme.typography.caption, { color: theme.textDim }]}>User's outfits would be shown here.</Text>
-    </View>
-  );
+  // Render posted outfits in a grid/list
+  // Shows all outfits that this user has posted publicly
+  const renderOutfits = () => {
+    if (loadingOutfits) {
+      return (
+        <View style={styles.outfitsContainer}>
+          <Text style={[theme.typography.caption, { color: theme.textDim }]}>Loading outfits...</Text>
+        </View>
+      );
+    }
+
+    if (postedOutfits.length === 0) {
+      return (
+        <View style={styles.outfitsContainer}>
+          <MaterialCommunityIcons name="tshirt-crew-outline" size={48} color={theme.textDim} />
+          <Text style={[theme.typography.body, { color: theme.textDim, marginTop: 12 }]}>
+            No posted outfits yet
+          </Text>
+        </View>
+      );
+    }
+
+    return (
+      <View style={styles.outfitsListContainer}>
+        <Text style={[theme.typography.subheadline, { color: theme.text, marginBottom: 16, paddingHorizontal: 20 }]}>
+          Posted Outfits
+        </Text>
+        <FlatList
+          data={postedOutfits}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <View style={[styles.postedOutfitCard, { backgroundColor: theme.surface }]}>
+              {/* Outfit preview */}
+              <View style={styles.outfitPreviewContainer}>
+                <OutfitPreview
+                  selectedItems={item.outfitItems || []}
+                  onItemTransform={() => {}}
+                  activeLayer={null}
+                  onLayerSelect={() => {}}
+                />
+              </View>
+              {/* Outfit name and caption */}
+              <View style={styles.outfitInfo}>
+                <Text style={[theme.typography.subheadline, { color: theme.text }]}>
+                  {item.outfitName || 'Untitled Outfit'}
+                </Text>
+                {item.caption && (
+                  <Text style={[theme.typography.body, { color: theme.textDim, marginTop: 8 }]}>
+                    {item.caption}
+                  </Text>
+                )}
+              </View>
+            </View>
+          )}
+          contentContainerStyle={styles.outfitsListContent}
+          showsVerticalScrollIndicator={false}
+        />
+      </View>
+    );
+  };
 
   if (loading || !user) {
     return <View style={[styles.container, { backgroundColor: theme.background }]}><Text style={[theme.typography.body, { color: theme.textDim }]}>Loading...</Text></View>;
@@ -148,7 +232,12 @@ export default function UserProfileScreen({ route, navigation }) {
             </Text>
           )}
           <View style={styles.statsContainer}>
-            <View style={styles.statItem}><Text style={[theme.typography.subheadline, { color: theme.text }]}>{user.outfits || 0}</Text><Text style={[theme.typography.caption, { color: theme.textDim }]}>Outfits</Text></View>
+            <View style={styles.statItem}>
+              <Text style={[theme.typography.subheadline, { color: theme.text }]}>
+                {postedOutfits.length}
+              </Text>
+              <Text style={[theme.typography.caption, { color: theme.textDim }]}>Outfits</Text>
+            </View>
             <View style={styles.statItem}><Text style={[theme.typography.subheadline, { color: theme.text }]}>{user.followers?.length || 0}</Text><Text style={[theme.typography.caption, { color: theme.textDim }]}>Followers</Text></View>
             <View style={styles.statItem}><Text style={[theme.typography.subheadline, { color: theme.text }]}>{user.following?.length || 0}</Text><Text style={[theme.typography.caption, { color: theme.textDim }]}>Following</Text></View>
           </View>
@@ -201,5 +290,24 @@ const styles = StyleSheet.create({
   statItem: { alignItems: 'center', flex: 1 },
   followButton: { marginTop: 16, paddingVertical: 10, paddingHorizontal: 32, borderRadius: 24, alignItems: 'center' },
   outfitsContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
+  outfitsListContainer: { flex: 1 },
+  outfitsListContent: { padding: 20, paddingBottom: 40 },
+  postedOutfitCard: {
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  outfitPreviewContainer: {
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  outfitInfo: {
+    marginTop: 8,
+  },
   privateContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 },
 }); 

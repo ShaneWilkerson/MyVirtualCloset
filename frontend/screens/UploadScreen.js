@@ -1,7 +1,7 @@
-import React, { useLayoutEffect, useMemo, useState } from 'react';
+import React, { useLayoutEffect, useMemo, useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, Image, TouchableOpacity, TextInput,
-  ActivityIndicator, Alert, ScrollView,
+  ActivityIndicator, Alert, ScrollView, FlatList,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as FileSystem from 'expo-file-system';
@@ -10,11 +10,12 @@ import { useTheme } from '../context/ThemeContext';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 import { auth, db, storage } from '../services/firebase';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, query, where, orderBy, getDocs, doc, updateDoc, increment } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // ✅ your existing helper (you said it lives here)
 import { removeBackgroundAndPredict as processImageOnBackend } from '../services/imageUtils';
+import OutfitPreview from '../components/OutfitPreview';
 
 /* ---------------- helpers (same behavior as your original flow) ---------------- */
 
@@ -85,28 +86,121 @@ function extractAttributes(result) {
 }
 /* ----------------------------------------------------------------------------- */
 
-export default function UploadScreen({ navigation }) {
+/**
+ * UploadScreen Component
+ * 
+ * Handles two modes:
+ * 1. Regular mode: Upload clothing items to closet (image picker + processing)
+ * 2. Post Outfit mode: Select from saved outfits and post with caption
+ * 
+ * When accessed from SocialScreen "Post Outfit" button, mode='postOutfit' is passed
+ * which switches the UI to show outfit selection instead of image picker.
+ */
+export default function UploadScreen({ route, navigation }) {
   const { theme } = useTheme();
+  
+  // Check if we're in "post outfit" mode from route params
+  const isPostOutfitMode = route?.params?.mode === 'postOutfit';
 
+  // Regular upload mode state
   const [mode, setMode] = useState('process'); // 'process' | 'manual'
   const [pickedImage, setPickedImage] = useState(null);
-  const [previewImage, setPreviewImage] = useState(null); // file:// or data:
+  const [previewImage, setPreviewImage] = useState(null);
   const [saving, setSaving] = useState(false);
   const [working, setWorking] = useState(false);
-
   const [typeField, setTypeField] = useState('');
   const [colorField, setColorField] = useState('');
   const [tagsField, setTagsField] = useState('');
 
+  // Post outfit mode state
+  const [outfits, setOutfits] = useState([]);
+  const [selectedOutfit, setSelectedOutfit] = useState(null);
+  const [caption, setCaption] = useState('');
+  const [postedOutfitIds, setPostedOutfitIds] = useState([]); // Track which outfits are already posted
+  const [loadingOutfits, setLoadingOutfits] = useState(true);
+  const [posting, setPosting] = useState(false);
+
+  // Update header title based on mode
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: 'Upload',
+      title: isPostOutfitMode ? 'Post Outfit' : 'Upload',
       headerStyle: { backgroundColor: theme.surface },
       headerTitleStyle: theme.typography.headline,
       headerTintColor: theme.primary,
     });
-  }, [navigation, theme]);
+  }, [navigation, theme, isPostOutfitMode]);
 
+  // Fetch user's outfits and check which ones are already posted
+  // Only show outfits that haven't been posted yet
+  useEffect(() => {
+    if (!isPostOutfitMode) return;
+
+    const fetchOutfitsAndPosted = async () => {
+      try {
+        const user = auth.currentUser;
+        if (!user) return;
+
+        // Fetch all user's outfits
+        // Try with orderBy first, fallback to without orderBy if index is missing
+        let outfitsSnapshot;
+        try {
+          const outfitsQuery = query(
+            collection(db, 'outfits'),
+            where('uid', '==', user.uid),
+            orderBy('createdAt', 'desc')
+          );
+          outfitsSnapshot = await getDocs(outfitsQuery);
+        } catch (orderByError) {
+          // If orderBy fails (missing index), try without orderBy
+          // This can happen if the composite index hasn't been created yet
+          console.warn('orderBy failed, trying without orderBy:', orderByError);
+          const outfitsQuery = query(
+            collection(db, 'outfits'),
+            where('uid', '==', user.uid)
+          );
+          outfitsSnapshot = await getDocs(outfitsQuery);
+        }
+
+        const allOutfits = outfitsSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        // Sort client-side if orderBy failed (newest first)
+        allOutfits.sort((a, b) => {
+          const aTime = a.createdAt?.toDate?.()?.getTime() || 0;
+          const bTime = b.createdAt?.toDate?.()?.getTime() || 0;
+          return bTime - aTime;
+        });
+
+        // Fetch all posted outfits by this user to see which ones are already posted
+        const postedQuery = query(
+          collection(db, 'postedOutfits'),
+          where('uid', '==', user.uid)
+        );
+        const postedSnapshot = await getDocs(postedQuery);
+        const postedIds = postedSnapshot.docs.map(doc => doc.data().outfitId);
+
+        setPostedOutfitIds(postedIds);
+        
+        // Filter out already-posted outfits
+        const availableOutfits = allOutfits.filter(outfit => !postedIds.includes(outfit.id));
+        setOutfits(availableOutfits);
+      } catch (err) {
+        console.error('Error fetching outfits:', err);
+        Alert.alert(
+          'Error',
+          'Failed to load outfits. Please check your Firestore rules and ensure you have the proper indexes set up.'
+        );
+      } finally {
+        setLoadingOutfits(false);
+      }
+    };
+
+    fetchOutfitsAndPosted();
+  }, [isPostOutfitMode]);
+
+  // Regular upload mode functions (existing functionality)
   const canSave = useMemo(() => !!previewImage && !saving && !working, [previewImage, saving, working]);
 
   const pick = async () => {
@@ -116,7 +210,6 @@ export default function UploadScreen({ navigation }) {
         Alert.alert('Permission needed', 'Allow photo library access to pick images.');
         return;
       }
-      // Use the same options your original used (warning is fine)
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: false,
@@ -134,7 +227,7 @@ export default function UploadScreen({ navigation }) {
       }
 
       setPickedImage(asset);
-      setPreviewImage(asset.uri); // file://
+      setPreviewImage(asset.uri);
       setTypeField('');
       setColorField('');
       setTagsField('');
@@ -151,14 +244,10 @@ export default function UploadScreen({ navigation }) {
     }
     try {
       setWorking(true);
-
       const result = await processImageOnBackend(pickedImage.uri);
       if (!result?.base64_image) throw new Error('Backend did not return base64_image');
-
-      // show processed PNG as data URL
       const dataUrl = `data:image/png;base64,${result.base64_image}`;
       setPreviewImage(dataUrl);
-
       const { type, color, tags } = extractAttributes(result);
       if (type) setTypeField(String(type));
       if (color) setColorField(String(color));
@@ -184,9 +273,6 @@ export default function UploadScreen({ navigation }) {
       }
 
       setSaving(true);
-
-      // --- EXACT UPLOAD METHOD AS ORIGINALS ---
-      // Ensure we have a *file uri* to upload (convert data URL -> temp file first)
       let fileUri = previewImage;
       let mime = 'image/jpeg';
 
@@ -198,16 +284,12 @@ export default function UploadScreen({ navigation }) {
         mime = guessMimeFromPath(previewImage) || 'image/jpeg';
       }
 
-      // Now upload via fetch(uri)->blob->uploadBytes (no ArrayBuffer construction on our side)
       const resp = await fetch(fileUri);
       const blob = await resp.blob();
 
       const ts = Date.now();
-      const ext =
-        mime === 'image/png' ? 'png' :
-        mime === 'image/webp' ? 'webp' : 'jpg';
+      const ext = mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : 'jpg';
       const fileName = `img_${ts}.${ext}`;
-
       const storagePath = `clothing/${user.uid}/images/${fileName}`;
       const storageRef = ref(storage, storagePath);
 
@@ -236,11 +318,204 @@ export default function UploadScreen({ navigation }) {
     }
   };
 
+  // Post outfit mode functions
+  // Handle posting a selected outfit with caption to the postedOutfits collection
+  const handlePostOutfit = async () => {
+    if (!selectedOutfit) {
+      Alert.alert('No Outfit Selected', 'Please select an outfit to post.');
+      return;
+    }
+
+    try {
+      const user = auth.currentUser;
+      if (!user) {
+        Alert.alert('Error', 'You must be logged in to post outfits.');
+        return;
+      }
+
+      setPosting(true);
+
+      // Create a post in the postedOutfits collection
+      // This links to the original outfit and includes the caption
+      await addDoc(collection(db, 'postedOutfits'), {
+        uid: user.uid,
+        outfitId: selectedOutfit.id,
+        outfitName: selectedOutfit.name || 'Untitled Outfit',
+        outfitItems: selectedOutfit.items || [],
+        caption: caption.trim() || '',
+        createdAt: serverTimestamp(),
+      });
+
+      // Update the user's outfit count in their profile
+      // This ensures the "(number) outfits" stat at the top updates immediately
+      const userDocRef = doc(db, 'users', user.uid);
+      await updateDoc(userDocRef, {
+        outfits: increment(1)
+      });
+
+      Alert.alert('Success', 'Outfit posted!', [
+        { text: 'OK', onPress: () => navigation.goBack() }
+      ]);
+    } catch (error) {
+      console.error('Error posting outfit:', error);
+      Alert.alert('Error', 'Failed to post outfit. Please try again.');
+    } finally {
+      setPosting(false);
+    }
+  };
+
   const switchTo = (nextMode) => {
     setMode(nextMode);
     if (pickedImage && nextMode === 'manual') setPreviewImage(pickedImage.uri);
   };
 
+  // Render outfit selection item
+  const renderOutfitItem = ({ item }) => (
+    <TouchableOpacity
+      style={[
+        styles.outfitItem,
+        {
+          backgroundColor: selectedOutfit?.id === item.id ? theme.primary : theme.surface,
+          borderColor: selectedOutfit?.id === item.id ? theme.primary : theme.border,
+          borderWidth: selectedOutfit?.id === item.id ? 2 : 1,
+        }
+      ]}
+      onPress={() => setSelectedOutfit(item)}
+      activeOpacity={0.7}
+    >
+      <View style={styles.outfitItemContent}>
+        <Text style={[
+          theme.typography.subheadline,
+          { color: selectedOutfit?.id === item.id ? theme.surface : theme.text }
+        ]}>
+          {item.name || 'Untitled Outfit'}
+        </Text>
+        <Text style={[
+          theme.typography.caption,
+          { color: selectedOutfit?.id === item.id ? theme.surface : theme.textDim }
+        ]}>
+          {item.items?.length || 0} items
+        </Text>
+      </View>
+      {selectedOutfit?.id === item.id && (
+        <MaterialCommunityIcons name="check-circle" size={24} color={theme.surface} />
+      )}
+    </TouchableOpacity>
+  );
+
+  // If in post outfit mode, show outfit selection UI
+  if (isPostOutfitMode) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
+        <ScrollView contentContainerStyle={styles.content}>
+          {/* Select Outfit Section */}
+          <View style={styles.section}>
+            <Text style={[theme.typography.subheadline, { color: theme.text, marginBottom: 12 }]}>
+              Select Outfit to Post
+            </Text>
+            
+            {loadingOutfits ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color={theme.primary} />
+                <Text style={[theme.typography.caption, { color: theme.textDim, marginTop: 12 }]}>
+                  Loading outfits...
+                </Text>
+              </View>
+            ) : outfits.length === 0 ? (
+              <View style={styles.emptyContainer}>
+                <MaterialCommunityIcons name="tshirt-crew-outline" size={48} color={theme.textDim} />
+                <Text style={[theme.typography.body, { color: theme.textDim, marginTop: 12, textAlign: 'center' }]}>
+                  {postedOutfitIds.length > 0 
+                    ? 'All your outfits have been posted already.'
+                    : 'No saved outfits yet. Create an outfit first!'}
+                </Text>
+              </View>
+            ) : (
+              <FlatList
+                data={outfits}
+                renderItem={renderOutfitItem}
+                keyExtractor={(item) => item.id}
+                scrollEnabled={false}
+              />
+            )}
+          </View>
+
+          {/* Preview Selected Outfit */}
+          {selectedOutfit && (
+            <View style={styles.section}>
+              <Text style={[theme.typography.subheadline, { color: theme.text, marginBottom: 12 }]}>
+                Preview
+              </Text>
+              <View style={styles.previewContainer}>
+                <OutfitPreview
+                  selectedItems={selectedOutfit.items || []}
+                  onItemTransform={() => {}}
+                  activeLayer={null}
+                  onLayerSelect={() => {}}
+                />
+              </View>
+            </View>
+          )}
+
+          {/* Caption Input */}
+          <View style={styles.section}>
+            <Text style={[theme.typography.subheadline, { color: theme.text, marginBottom: 12 }]}>
+              Caption (Optional)
+            </Text>
+            <TextInput
+              style={[
+                styles.captionInput,
+                {
+                  backgroundColor: theme.surface,
+                  borderColor: theme.border,
+                  color: theme.text
+                }
+              ]}
+              placeholder="Write a caption for your outfit..."
+              placeholderTextColor={theme.textDim}
+              value={caption}
+              onChangeText={setCaption}
+              multiline
+              numberOfLines={4}
+              maxLength={500}
+            />
+            <Text style={[theme.typography.caption, { color: theme.textDim, marginTop: 4, textAlign: 'right' }]}>
+              {caption.length}/500
+            </Text>
+          </View>
+
+          {/* Post Button */}
+          <TouchableOpacity
+            disabled={!selectedOutfit || posting}
+            onPress={handlePostOutfit}
+            style={[
+              styles.postButton,
+              {
+                backgroundColor: selectedOutfit && !posting ? theme.primary : theme.border,
+                opacity: selectedOutfit && !posting ? 1 : 0.5
+              }
+            ]}
+          >
+            {posting ? (
+              <ActivityIndicator color={theme.surface} />
+            ) : (
+              <>
+                <MaterialCommunityIcons name="share" size={20} color={selectedOutfit ? theme.surface : theme.textDim} />
+                <Text style={[
+                  theme.typography.body,
+                  { color: selectedOutfit ? theme.surface : theme.textDim, marginLeft: 8 }
+                ]}>
+                  Post Outfit
+                </Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  // Regular upload mode (existing functionality)
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: theme.background }]}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -363,4 +638,35 @@ const styles = StyleSheet.create({
   actionBtn: { marginTop: 12, paddingVertical: 12, borderRadius: 10, alignItems: 'center' },
   input: { marginTop: 6, borderWidth: 1, borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10 },
   saveBtn: { marginTop: 20, paddingVertical: 14, alignItems: 'center', borderRadius: 10 },
+  // Post outfit mode styles
+  section: { marginBottom: 24 },
+  loadingContainer: { padding: 40, alignItems: 'center' },
+  emptyContainer: { padding: 40, alignItems: 'center', backgroundColor: '#f5f5f5', borderRadius: 12 },
+  outfitItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  outfitItemContent: { flex: 1 },
+  previewContainer: { alignItems: 'center' },
+  captionInput: {
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    minHeight: 100,
+    textAlignVertical: 'top',
+    fontSize: 16,
+  },
+  postButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 14,
+    borderRadius: 10,
+    marginTop: 20,
+  },
 });
